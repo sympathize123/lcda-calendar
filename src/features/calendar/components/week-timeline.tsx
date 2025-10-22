@@ -84,9 +84,11 @@ export function WeekTimeline({
             {weekDays.map((day) => {
               const dayStart = startOfDay(day);
               const dayEnd = endOfDay(day);
-              const dayEvents = events.filter((event) =>
-                eventOverlapsRange(event, dayStart, dayEnd),
-              );
+              const dayEvents = events
+                .filter((event) => eventOverlapsRange(event, dayStart, dayEnd))
+                .sort(
+                  (a, b) => a.start.getTime() - b.start.getTime(),
+                );
 
               return (
                 <div
@@ -118,14 +120,29 @@ export function WeekTimeline({
                     {dayEvents.map((event) => {
                       const clampedStart = event.start < dayStart ? dayStart : event.start;
                       const clampedEnd = event.end > dayEnd ? dayEnd : event.end;
-                      const startSlot = getSlotIndex(clampedStart);
                       const durationMinutes = Math.max(
                         differenceInMinutes(clampedEnd, clampedStart),
                         MINUTES_PER_SLOT,
                       );
-                      const span = Math.ceil(durationMinutes / MINUTES_PER_SLOT);
-                      const top = `calc(${startSlot} * (100% / ${TOTAL_SLOTS}))`;
-                      const height = `calc(${span} * (100% / ${TOTAL_SLOTS}))`;
+                      const offsetMinutes = Math.max(
+                        differenceInMinutes(clampedStart, dayStart),
+                        0,
+                      );
+                      const totalMinutes = TOTAL_SLOTS * MINUTES_PER_SLOT;
+                      const topPercent = Math.min(
+                        (offsetMinutes / totalMinutes) * 100,
+                        100,
+                      );
+                      const minHeightPercent = (MINUTES_PER_SLOT / totalMinutes) * 100;
+                      const heightPercent = Math.max(
+                        minHeightPercent,
+                        Math.min(
+                          (durationMinutes / totalMinutes) * 100,
+                          100 - topPercent,
+                        ),
+                      );
+                      const top = `${topPercent}%`;
+                      const height = `${heightPercent}%`;
 
                       return (
                         <button
@@ -182,8 +199,4 @@ function formatSlotLabel(slotIndex: number) {
 
 function createSlotDate(day: Date, hours: number, minutes: number) {
   return set(day, { hours, minutes, seconds: 0, milliseconds: 0 });
-}
-
-function getSlotIndex(date: Date) {
-  return date.getHours() * 2 + (date.getMinutes() >= 30 ? 1 : 0);
 }
