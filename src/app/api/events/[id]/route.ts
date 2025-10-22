@@ -1,5 +1,3 @@
-"use server";
-
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
@@ -7,6 +5,10 @@ import {
   type RecurrenceRuleInput,
   updateEvent,
 } from "@/server/events/service";
+
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
 
 const updateSchema = z.object({
   title: z.string().min(1),
@@ -29,16 +31,17 @@ const updateSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  context: RouteContext,
 ) {
   try {
+    const { id } = await context.params;
     const json = await request.json();
     const parsed = updateSchema.parse(json);
     const recurrence = parsed.recurrence
       ? (parsed.recurrence as RecurrenceRuleInput)
       : null;
 
-    await updateEvent(params.id, {
+    await updateEvent(id, {
       title: parsed.title,
       description: parsed.description,
       location: parsed.location,
@@ -67,10 +70,11 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } },
+  context: RouteContext,
 ) {
   try {
-    await deleteEvent(params.id);
+    const { id } = await context.params;
+    await deleteEvent(id);
     return NextResponse.json({ status: "ok" });
   } catch (error) {
     console.error("Failed to delete event", error);
