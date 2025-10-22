@@ -36,7 +36,7 @@ export function EventDetailSheet({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/25 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in" />
-        <Dialog.Content className="fixed right-0 top-0 h-full w-full max-w-md border-l border-border/60 bg-surface p-6 shadow-[var(--shadow-soft)] data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right">
+        <Dialog.Content className="fixed right-6 top-1/2 h-[520px] w-full max-w-sm -translate-y-1/2 rounded-[var(--radius-lg)] border border-border/60 bg-surface p-6 shadow-[var(--shadow-soft)] data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=open]:fade-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right">
           <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-4">
             <div className="flex flex-col gap-1">
               <Dialog.Title className="text-xl font-semibold text-foreground">
@@ -75,7 +75,7 @@ export function EventDetailSheet({
             ) : null}
           </div>
 
-          <div className="mt-auto flex items-center justify-between gap-3 pt-6">
+          <div className="mt-auto flex items-center justify-end gap-3 pt-8">
             <button
               type="button"
               onClick={() => onDelete(event)}

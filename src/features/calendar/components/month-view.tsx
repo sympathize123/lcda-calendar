@@ -1,5 +1,5 @@
-import { Fragment, useMemo } from "react";
-import { format, isSameMonth, isToday } from "date-fns";
+import { Fragment, useMemo, useState } from "react";
+import { format, isSameDay, isSameMonth, isToday } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Plus, ArrowsClockwise } from "phosphor-react";
 import { CalendarEvent } from "../types";
@@ -21,6 +21,7 @@ export function MonthView({
 }: MonthViewProps) {
   const weekDays = useMemo(() => getWeekDays(anchorDate), [anchorDate]);
   const monthMatrix = useMemo(() => getMonthMatrix(anchorDate), [anchorDate]);
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
   return (
     <div className="flex h-full min-h-[640px] flex-col gap-4">
@@ -49,13 +50,15 @@ export function MonthView({
                       !isSameMonth(day, anchorDate) && "bg-surface-muted text-muted",
                     )}
                     onDoubleClick={() => onSelectDay(day)}
+                    onMouseEnter={() => setHoveredDate(day)}
+                    onMouseLeave={() => setHoveredDate(null)}
                   >
                     <div className="flex items-start justify-between gap-2 text-sm font-semibold">
                       <span
                         className={cn(
                           "flex h-8 w-8 items-center justify-center rounded-full text-sm transition",
                           isToday(day)
-                            ? "bg-color-today text-white shadow-md"
+                            ? "bg-color-today text-black shadow-md"
                             : "text-foreground",
                         )}
                       >
@@ -65,10 +68,15 @@ export function MonthView({
                         type="button"
                         onClick={() => onSelectDay(day)}
                         aria-label={`${label} 일정 추가`}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-sm transition hover:bg-primary/90 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface group-hover:opacity-100"
-                        >
-                          <Plus size={16} weight="bold" />
-                        </button>
+                        className={cn(
+                          "inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-sm transition hover:bg-primary/90 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
+                          hoveredDate && isSameDay(hoveredDate, day)
+                            ? "opacity-100"
+                            : "group-hover:opacity-0",
+                        )}
+                      >
+                        <Plus size={16} weight="bold" />
+                      </button>
                     </div>
 
                     <div className="mt-2 flex flex-col gap-1">
