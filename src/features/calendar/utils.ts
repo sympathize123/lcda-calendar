@@ -6,12 +6,24 @@ import {
   format,
   isSameDay,
   isSameMonth,
-  isWithinInterval,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
 import { ko } from "date-fns/locale";
 import { CalendarEvent, CalendarView } from "./types";
+
+export function eventOverlapsRange(
+  event: CalendarEvent,
+  rangeStart: Date,
+  rangeEnd: Date,
+) {
+  const eventStart = event.start.getTime();
+  const eventEnd = event.end.getTime();
+  const start = rangeStart.getTime();
+  const end = rangeEnd.getTime();
+
+  return eventStart <= end && eventEnd >= start;
+}
 
 export const WEEK_STARTS_ON: 0 | 1 = 1;
 
@@ -53,8 +65,5 @@ export function getEventsForDay(events: CalendarEvent[], day: Date) {
 }
 
 export function getEventsForRange(events: CalendarEvent[], start: Date, end: Date) {
-  return events.filter((event) =>
-    isWithinInterval(event.start, { start, end }) ||
-    isWithinInterval(event.end, { start, end }),
-  );
+  return events.filter((event) => eventOverlapsRange(event, start, end));
 }

@@ -1,14 +1,16 @@
 import { useMemo } from "react";
 import {
   differenceInMinutes,
+  endOfDay,
   format,
   isSameDay,
   set,
+  startOfDay,
   startOfWeek,
 } from "date-fns";
 import { ko } from "date-fns/locale";
 import { CalendarEvent } from "../types";
-import { getWeekDays, WEEK_STARTS_ON } from "../utils";
+import { eventOverlapsRange, getWeekDays, WEEK_STARTS_ON } from "../utils";
 import { cn } from "@/lib/utils";
 
 const TOTAL_SLOTS = 48;
@@ -80,7 +82,11 @@ export function WeekTimeline({
         <div className="relative overflow-x-auto">
           <div className="grid grid-cols-7">
             {weekDays.map((day) => {
-              const dayEvents = events.filter((event) => isSameDay(event.start, day));
+              const dayStart = startOfDay(day);
+              const dayEnd = endOfDay(day);
+              const dayEvents = events.filter((event) =>
+                eventOverlapsRange(event, dayStart, dayEnd),
+              );
 
               return (
                 <div
@@ -110,9 +116,11 @@ export function WeekTimeline({
 
                   <div className="pointer-events-none absolute inset-x-1">
                     {dayEvents.map((event) => {
-                      const startSlot = getSlotIndex(event.start);
+                      const clampedStart = event.start < dayStart ? dayStart : event.start;
+                      const clampedEnd = event.end > dayEnd ? dayEnd : event.end;
+                      const startSlot = getSlotIndex(clampedStart);
                       const durationMinutes = Math.max(
-                        differenceInMinutes(event.end, event.start),
+                        differenceInMinutes(clampedEnd, clampedStart),
                         MINUTES_PER_SLOT,
                       );
                       const span = Math.ceil(durationMinutes / MINUTES_PER_SLOT);
