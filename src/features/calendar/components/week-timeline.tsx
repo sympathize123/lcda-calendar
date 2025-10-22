@@ -43,7 +43,7 @@ export function WeekTimeline({
   const currentOffset = `calc(${currentMinutes} * (100% / 1440))`;
 
   return (
-    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border/60 bg-surface shadow-[var(--shadow-soft)]">
+    <div className="min-h-[640px] overflow-hidden rounded-[var(--radius-lg)] border border-border/60 bg-surface shadow-[var(--shadow-soft)]">
       <div className="grid grid-cols-[80px_minmax(0,1fr)]">
         <div className="border-b border-border/60 bg-surface-muted px-3 py-3 text-xs font-semibold uppercase tracking-[0.22em] text-muted">
           Time

@@ -160,6 +160,8 @@ export function CalendarPage() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  const overlayActive = composerState.open || detailEvent !== null;
+
   return (
     <AppShell
       view={view}
@@ -168,8 +170,9 @@ export function CalendarPage() {
       onNavigate={handleNavigate}
       onResetToday={() => setAnchorDate(new Date())}
       onCreateEvent={handleCreateShortcut}
+      overlayActive={overlayActive}
     >
-      <section className="grid gap-6">
+      <section className="flex flex-col items-center gap-8">
         <OverviewCard
           upcomingEvent={upcomingEvent}
           anchorDate={anchorDate}
@@ -177,7 +180,7 @@ export function CalendarPage() {
           isLoading={eventsQuery.isLoading}
         />
 
-        <div className="rounded-[var(--radius-lg)] border border-border/60 bg-surface shadow-[var(--shadow-soft)]">
+        <div className="w-full max-w-[1100px] rounded-[var(--radius-lg)] border border-border/60 bg-surface shadow-[var(--shadow-soft)]">
           <div className="flex flex-wrap items-start justify-between gap-4 px-6 pt-6">
             <div>
               <h2 className="text-lg font-semibold text-foreground">
@@ -291,11 +294,11 @@ function OverviewCard({
   isLoading,
 }: OverviewCardProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-[var(--radius-lg)] border border-border/60 bg-surface px-6 py-5 shadow-[var(--shadow-soft)]">
+    <div className="w-full max-w-[1100px] rounded-[var(--radius-lg)] border border-border/60 bg-surface px-6 py-5 shadow-[var(--shadow-soft)]">
       <div className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">
         Ensemble Overview
       </div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <p className="text-[2rem] font-semibold leading-tight tracking-tight text-foreground sm:text-[2.25rem]">
             {format(anchorDate, "M월 합주 현황", { locale: ko })}

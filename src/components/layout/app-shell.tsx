@@ -19,6 +19,7 @@ type AppShellProps = {
   onResetToday: () => void;
   onCreateEvent: () => void;
   className?: string;
+  overlayActive?: boolean;
 };
 
 export function AppShell({
@@ -30,10 +31,14 @@ export function AppShell({
   onNavigate,
   onResetToday,
   onCreateEvent,
+  overlayActive = false,
 }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-surface/95 backdrop-blur-md transition-[border-color,background-color]">
+      <header
+        data-overlay-active={overlayActive}
+        className="sticky top-0 z-40 border-b border-border/60 bg-surface/95 backdrop-blur-md transition-all duration-300 ease-out data-[overlay-active=true]:-translate-y-20 data-[overlay-active=true]:pointer-events-none data-[overlay-active=true]:opacity-0"
+      >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <button

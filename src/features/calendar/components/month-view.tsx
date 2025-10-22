@@ -23,7 +23,7 @@ export function MonthView({
   const monthMatrix = useMemo(() => getMonthMatrix(anchorDate), [anchorDate]);
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full min-h-[640px] flex-col gap-4">
       <div className="grid grid-cols-7 gap-2 px-4 text-xs font-semibold uppercase tracking-[0.22em] text-muted">
         {weekDays.map((day) => (
           <div className="text-center" key={day.toISOString()}>
