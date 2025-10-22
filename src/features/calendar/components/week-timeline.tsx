@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import {
-  differenceInMinutes,
   endOfDay,
   format,
   isSameDay,
@@ -79,16 +78,14 @@ export function WeekTimeline({
           </div>
         </div>
 
-        <div className="relative overflow-x-auto">
+        <div className="relative overflow-x-hidden md:overflow-x-hidden">
           <div className="grid grid-cols-7">
             {weekDays.map((day) => {
               const dayStart = startOfDay(day);
               const dayEnd = endOfDay(day);
               const dayEvents = events
                 .filter((event) => eventOverlapsRange(event, dayStart, dayEnd))
-                .sort(
-                  (a, b) => a.start.getTime() - b.start.getTime(),
-                );
+                .sort((a, b) => a.start.getTime() - b.start.getTime());
 
               return (
                 <div
@@ -120,29 +117,14 @@ export function WeekTimeline({
                     {dayEvents.map((event) => {
                       const clampedStart = event.start < dayStart ? dayStart : event.start;
                       const clampedEnd = event.end > dayEnd ? dayEnd : event.end;
-                      const durationMinutes = Math.max(
-                        differenceInMinutes(clampedEnd, clampedStart),
-                        MINUTES_PER_SLOT,
+                      const startSlot = getSlotIndex(clampedStart);
+                      const endSlot = Math.max(
+                        startSlot + 1,
+                        Math.ceil(getSlotIndex(clampedEnd)),
                       );
-                      const offsetMinutes = Math.max(
-                        differenceInMinutes(clampedStart, dayStart),
-                        0,
-                      );
-                      const totalMinutes = TOTAL_SLOTS * MINUTES_PER_SLOT;
-                      const topPercent = Math.min(
-                        (offsetMinutes / totalMinutes) * 100,
-                        100,
-                      );
-                      const minHeightPercent = (MINUTES_PER_SLOT / totalMinutes) * 100;
-                      const heightPercent = Math.max(
-                        minHeightPercent,
-                        Math.min(
-                          (durationMinutes / totalMinutes) * 100,
-                          100 - topPercent,
-                        ),
-                      );
-                      const top = `${topPercent}%`;
-                      const height = `${heightPercent}%`;
+                      const span = Math.min(endSlot, TOTAL_SLOTS) - startSlot;
+                      const top = `${(startSlot / TOTAL_SLOTS) * 100}%`;
+                      const height = `${(span / TOTAL_SLOTS) * 100}%`;
 
                       return (
                         <button
@@ -199,4 +181,8 @@ function formatSlotLabel(slotIndex: number) {
 
 function createSlotDate(day: Date, hours: number, minutes: number) {
   return set(day, { hours, minutes, seconds: 0, milliseconds: 0 });
+}
+
+function getSlotIndex(date: Date) {
+  return date.getHours() * 2 + date.getMinutes() / MINUTES_PER_SLOT;
 }
