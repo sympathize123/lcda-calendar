@@ -115,6 +115,7 @@ const [detailState, setDetailState] = useState<DetailState | null>(null);
   };
 
   const openComposerFor = (date: Date, mode: "create" | "edit", event?: CalendarEvent) => {
+    setAnchorDate(date);
     setComposerState({
       open: true,
       mode,
@@ -223,11 +224,15 @@ const [detailState, setDetailState] = useState<DetailState | null>(null);
                   <MonthView
                     anchorDate={anchorDate}
                     events={events}
+                    onEventClick={(event) => {
+                      setAnchorDate(event.start);
+                      setDetailState({ mode: "event", event, date: event.start });
+                    }}
                     onSelectDay={(date) => openComposerFor(date, "create")}
-                    onEventClick={(event) =>
-                      setDetailState({ mode: "event", event, date: event.start })
-                    }
-                    onShowDayEvents={(date) => setDetailState({ mode: "day", date })}
+                    onShowDayEvents={(date) => {
+                      setAnchorDate(date);
+                      setDetailState({ mode: "day", date });
+                    }}
                   />
                 </motion.div>
               ) : (
@@ -243,9 +248,10 @@ const [detailState, setDetailState] = useState<DetailState | null>(null);
                     anchorDate={anchorDate}
                     events={weekEvents}
                     onSelectSlot={(date) => openComposerFor(date, "create")}
-                    onEventClick={(event) =>
-                      setDetailState({ mode: "event", event, date: event.start })
-                    }
+                    onEventClick={(event) => {
+                      setAnchorDate(event.start);
+                      setDetailState({ mode: "event", event, date: event.start });
+                    }}
                   />
                 </motion.div>
               )}
