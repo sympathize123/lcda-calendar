@@ -24,7 +24,10 @@ import { CalendarEvent, CalendarView, EventFormPayload } from "./types";
 import { EventComposer } from "./components/event-composer";
 import { MonthView } from "./components/month-view";
 import { WeekTimeline } from "./components/week-timeline";
-import { EventDetailSheet } from "./components/event-detail-sheet";
+import {
+  DetailState,
+  EventDetailDialog,
+} from "./components/event-detail-dialog";
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from "./api";
 import { formatRangeLabel, getEventsForRange, WEEK_STARTS_ON } from "./utils";
 
@@ -47,7 +50,7 @@ export function CalendarPage() {
   const [anchorDate, setAnchorDate] = useState(() => new Date());
   const [composerState, setComposerState] =
     useState<ComposerState>(INITIAL_COMPOSER_STATE);
-  const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
+const [detailState, setDetailState] = useState<DetailState | null>(null);
 
   const range = useMemo(() => getViewRange(view, anchorDate), [view, anchorDate]);
 
@@ -146,7 +149,7 @@ export function CalendarPage() {
   const handleDeleteEvent = async (event: CalendarEvent) => {
     try {
       await deleteMutation.mutateAsync(event.sourceEventId);
-      setDetailEvent(null);
+      setDetailState(null);
     } catch (error) {
       console.error(error);
       alert("일정 삭제에 실패했습니다. 다시 시도해 주세요.");
@@ -160,7 +163,7 @@ export function CalendarPage() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
-  const overlayActive = composerState.open || detailEvent !== null;
+  const overlayActive = composerState.open || detailState !== null;
 
   return (
     <AppShell
@@ -221,7 +224,10 @@ export function CalendarPage() {
                     anchorDate={anchorDate}
                     events={events}
                     onSelectDay={(date) => openComposerFor(date, "create")}
-                    onEventClick={(event) => setDetailEvent(event)}
+                    onEventClick={(event) =>
+                      setDetailState({ mode: "event", event, date: event.start })
+                    }
+                    onShowDayEvents={(date) => setDetailState({ mode: "day", date })}
                   />
                 </motion.div>
               ) : (
@@ -237,7 +243,9 @@ export function CalendarPage() {
                     anchorDate={anchorDate}
                     events={weekEvents}
                     onSelectSlot={(date) => openComposerFor(date, "create")}
-                    onEventClick={(event) => setDetailEvent(event)}
+                    onEventClick={(event) =>
+                      setDetailState({ mode: "event", event, date: event.start })
+                    }
                   />
                 </motion.div>
               )}
@@ -263,14 +271,17 @@ export function CalendarPage() {
         isSubmitting={isSaving}
       />
 
-      <EventDetailSheet
-        event={detailEvent}
-        open={detailEvent !== null}
-        onOpenChange={(open) => {
-          if (!open) setDetailEvent(null);
-        }}
+      <EventDetailDialog
+        open={detailState !== null}
+        state={detailState}
+        events={events}
+        onClose={() => setDetailState(null)}
+        onSelectEvent={(event, date) =>
+          setDetailState({ mode: "event", event, date })
+        }
+        onShowDay={(date) => setDetailState({ mode: "day", date })}
         onEdit={(event) => {
-          setDetailEvent(null);
+          setDetailState(null);
           openComposerFor(event.start, "edit", event);
         }}
         onDelete={handleDeleteEvent}

@@ -11,6 +11,7 @@ type MonthViewProps = {
   events: CalendarEvent[];
   onSelectDay: (day: Date) => void;
   onEventClick?: (event: CalendarEvent) => void;
+  onShowDayEvents?: (day: Date) => void;
 };
 
 export function MonthView({
@@ -18,6 +19,7 @@ export function MonthView({
   events,
   onSelectDay,
   onEventClick,
+  onShowDayEvents,
 }: MonthViewProps) {
   const weekDays = useMemo(() => getWeekDays(anchorDate), [anchorDate]);
   const monthMatrix = useMemo(() => getMonthMatrix(anchorDate), [anchorDate]);
@@ -72,7 +74,7 @@ export function MonthView({
                           "inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-sm transition hover:bg-primary/90 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
                           hoveredDate && isSameDay(hoveredDate, day)
                             ? "opacity-100"
-                            : "group-hover:opacity-0",
+                            : "",
                         )}
                       >
                         <Plus size={16} weight="bold" />
@@ -106,7 +108,7 @@ export function MonthView({
                       <button
                         type="button"
                         className="text-left text-xs font-medium text-primary underline-offset-2 hover:underline"
-                        onClick={() => onEventClick?.(dailyEvents[3])}
+                        onClick={() => onShowDayEvents?.(day)}
                       >
                         + {overflowCount}개의 일정 더보기
                       </button>

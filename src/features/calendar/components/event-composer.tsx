@@ -1,14 +1,24 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect, useMemo } from "react";
+import { Popover, Transition } from "@headlessui/react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   addMinutes,
+  addMonths,
   format,
+  parseISO,
   set,
   startOfDay,
   startOfMinute,
+  startOfMonth,
+  startOfWeek,
+  endOfMonth,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameDay,
+  isSameMonth,
 } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
@@ -17,6 +27,7 @@ import {
   Clock,
   MapPin,
   Palette,
+  CaretLeft,
   X,
 } from "phosphor-react";
 import { CalendarEvent, CalendarView, RecurrenceFormState } from "../types";
@@ -104,6 +115,32 @@ export function EventComposer({
   const selectedColor =
     useWatch({ control, name: "color" }) ?? COLOR_PRESETS[0].color;
   const repeatMode = useWatch({ control, name: "repeatMode" }) ?? "none";
+  const watchedDate = useWatch({ control, name: "date" });
+
+  const selectedDate = useMemo(() => {
+    if (watchedDate) {
+      try {
+        return parseISO(watchedDate);
+      } catch {
+        return initialDate ?? new Date();
+      }
+    }
+    return initialDate ?? new Date();
+  }, [watchedDate, initialDate]);
+
+  const [pickerMonth, setPickerMonth] = useState(() => startOfMonth(selectedDate));
+
+
+  const monthMatrix = useMemo(() => {
+    const start = startOfWeek(startOfMonth(pickerMonth), { weekStartsOn: 1 });
+    const end = endOfWeek(endOfMonth(pickerMonth), { weekStartsOn: 1 });
+    const days = eachDayOfInterval({ start, end });
+    const matrix: Date[][] = [];
+    for (let i = 0; i < days.length; i += 7) {
+      matrix.push(days.slice(i, i + 7));
+    }
+    return matrix;
+  }, [pickerMonth]);
 
   const onSubmitInternal = handleSubmit(async (values) => {
     const baseDate = values.date
@@ -139,9 +176,9 @@ export function EventComposer({
 
   const dialogTitle =
     mode === "edit" ? "일정 수정하기" : "새 합주 일정 만들기";
-  const displayDate = initialDate
-    ? format(initialDate, "yyyy년 M월 d일 (EEE)", { locale: ko })
-    : "날짜를 선택해 주세요";
+  const displayDate = format(selectedDate, "yyyy년 M월 d일 (EEE)", {
+    locale: ko,
+  });
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -191,12 +228,97 @@ export function EventComposer({
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="일자" icon={<CalendarBlank size={16} />}>
-                  <input
-                    type="text"
-                    value={displayDate}
-                    readOnly
-                    className="h-11 w-full rounded-[var(--radius-md)] border border-border/70 bg-surface px-3 text-sm text-foreground shadow-sm outline-none"
-                  />
+                  <Popover className="relative w-full">
+                    {({ close }) => (
+                      <>
+                        <Popover.Button
+                          onClick={() => setPickerMonth(startOfMonth(selectedDate))}
+                          className="flex h-11 w-full items-center justify-between rounded-[var(--radius-md)] border border-border/70 bg-surface px-3 text-sm font-medium text-foreground shadow-sm outline-none transition hover:border-primary focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
+                        >
+                          <span>{displayDate}</span>
+                        </Popover.Button>
+                        <Transition
+                          as={Fragment}
+                          enter="transition ease-out duration-150"
+                          enterFrom="opacity-0 translate-y-1"
+                          enterTo="opacity-100 translate-y-0"
+                          leave="transition ease-in duration-100"
+                          leaveFrom="opacity-100 translate-y-0"
+                          leaveTo="opacity-0 translate-y-1"
+                        >
+                          <Popover.Panel className="absolute left-0 right-0 z-20 mt-2 rounded-[var(--radius-lg)] border border-border/70 bg-surface shadow-[var(--shadow-soft)]">
+                            <div className="flex items-center justify-between px-4 py-3">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPickerMonth((prev) => addMonths(prev, -1))
+                                }
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-surface-muted"
+                              >
+                                <CaretLeft size={16} weight="bold" />
+                              </button>
+                              <span className="text-sm font-semibold text-foreground">
+                                {format(pickerMonth, "yyyy년 M월", { locale: ko })}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPickerMonth((prev) => addMonths(prev, 1))
+                                }
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-surface-muted"
+                              >
+                                <CaretLeft
+                                  size={16}
+                                  weight="bold"
+                                  className="rotate-180"
+                                />
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-7 gap-1 px-4 text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                              {["월", "화", "수", "목", "금", "토", "일"].map((label) => (
+                                <span key={label}>{label}</span>
+                              ))}
+                            </div>
+                            <div className="grid grid-cols-7 gap-1 px-4 pb-4">
+                              {monthMatrix.flat().map((day) => {
+                                const isCurrentMonth = isSameMonth(day, pickerMonth);
+                                const isSelected = isSameDay(day, selectedDate);
+                                const isToday = isSameDay(day, new Date());
+
+                                return (
+                                  <button
+                                    key={day.toISOString()}
+                                    type="button"
+                                    onClick={() => {
+                                      setValue(
+                                        "date",
+                                        format(day, "yyyy-MM-dd"),
+                                        { shouldDirty: true },
+                                      );
+                                      close();
+                                    }}
+                                    className={cn(
+                                      "flex aspect-square items-center justify-center rounded-[var(--radius-sm)] text-sm transition",
+                                      isCurrentMonth
+                                        ? "text-foreground"
+                                        : "text-muted",
+                                      isSelected
+                                        ? "bg-primary text-white shadow"
+                                        : isToday
+                                          ? "border border-primary/40"
+                                          : "hover:bg-surface-muted",
+                                    )}
+                                  >
+                                    {format(day, "d", { locale: ko })}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </Popover.Panel>
+                        </Transition>
+                      </>
+                    )}
+                  </Popover>
                 </Field>
                 <Field label="장소" icon={<MapPin size={16} />}>
                   <input
