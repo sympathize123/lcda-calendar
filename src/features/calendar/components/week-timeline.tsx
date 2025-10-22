@@ -80,9 +80,9 @@ export function WeekTimeline({
 
         <div className="relative overflow-x-hidden md:overflow-x-hidden">
           <div className="grid grid-cols-7">
-            {weekDays.map((day) => {
-              const dayStart = startOfDay(day);
-              const dayEnd = endOfDay(day);
+          {weekDays.map((day) => {
+            const dayStart = startOfDay(day);
+            const dayEnd = endOfDay(day);
               const dayEvents = events
                 .filter((event) => eventOverlapsRange(event, dayStart, dayEnd))
                 .sort((a, b) => a.start.getTime() - b.start.getTime());
@@ -117,12 +117,9 @@ export function WeekTimeline({
                     {dayEvents.map((event) => {
                       const clampedStart = event.start < dayStart ? dayStart : event.start;
                       const clampedEnd = event.end > dayEnd ? dayEnd : event.end;
-                      const startSlot = getSlotIndex(clampedStart);
-                      const endSlot = Math.max(
-                        startSlot + 1,
-                        Math.ceil(getSlotIndex(clampedEnd)),
-                      );
-                      const span = Math.min(endSlot, TOTAL_SLOTS) - startSlot;
+                      const startSlot = Math.max(0, Math.min(getSlotIndex(clampedStart), TOTAL_SLOTS));
+                      const endSlot = Math.max(startSlot + 1, Math.min(getSlotIndex(clampedEnd), TOTAL_SLOTS));
+                      const span = Math.max(endSlot - startSlot, 1);
                       const top = `${(startSlot / TOTAL_SLOTS) * 100}%`;
                       const height = `${(span / TOTAL_SLOTS) * 100}%`;
 
@@ -184,5 +181,5 @@ function createSlotDate(day: Date, hours: number, minutes: number) {
 }
 
 function getSlotIndex(date: Date) {
-  return date.getHours() * 2 + date.getMinutes() / MINUTES_PER_SLOT;
+  return date.getHours() * (60 / MINUTES_PER_SLOT) + date.getMinutes() / MINUTES_PER_SLOT;
 }
