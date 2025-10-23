@@ -1,24 +1,15 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Popover, Transition } from "@headlessui/react";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import {
   addMinutes,
-  addMonths,
   format,
   parseISO,
   set,
   startOfDay,
   startOfMinute,
-  startOfMonth,
-  startOfWeek,
-  endOfMonth,
-  endOfWeek,
-  eachDayOfInterval,
-  isSameDay,
-  isSameMonth,
 } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
@@ -27,7 +18,6 @@ import {
   Clock,
   MapPin,
   Palette,
-  CaretLeft,
   X,
 } from "phosphor-react";
 import { CalendarEvent, CalendarView, RecurrenceFormState } from "../types";
@@ -128,20 +118,6 @@ export function EventComposer({
     return initialDate ?? new Date();
   }, [watchedDate, initialDate]);
 
-  const [pickerMonth, setPickerMonth] = useState(() => startOfMonth(selectedDate));
-
-
-  const monthMatrix = useMemo(() => {
-    const start = startOfWeek(startOfMonth(pickerMonth), { weekStartsOn: 1 });
-    const end = endOfWeek(endOfMonth(pickerMonth), { weekStartsOn: 1 });
-    const days = eachDayOfInterval({ start, end });
-    const matrix: Date[][] = [];
-    for (let i = 0; i < days.length; i += 7) {
-      matrix.push(days.slice(i, i + 7));
-    }
-    return matrix;
-  }, [pickerMonth]);
-
   const onSubmitInternal = handleSubmit(async (values) => {
     const baseDate = values.date
       ? new Date(`${values.date}T00:00:00`)
@@ -183,8 +159,8 @@ export function EventComposer({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[min(92vw,740px)] -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-lg)] border border-border/60 bg-surface-elevated p-6 shadow-[var(--shadow-soft)] focus:outline-none">
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,740px)] -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-lg)] border border-border/60 bg-surface-elevated p-6 shadow-[var(--shadow-soft)] focus:outline-none">
           <header className="flex items-start justify-between gap-4 border-b border-border/60 pb-4">
             <div className="flex flex-col gap-2">
               <Dialog.Title className="text-xl font-semibold text-foreground">
@@ -228,97 +204,19 @@ export function EventComposer({
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="일자" icon={<CalendarBlank size={16} />}>
-                  <Popover className="relative w-full">
-                    {({ close }) => (
-                      <>
-                        <Popover.Button
-                          onClick={() => setPickerMonth(startOfMonth(selectedDate))}
-                          className="flex h-11 w-full items-center justify-between rounded-[var(--radius-md)] border border-border/70 bg-surface px-3 text-sm font-medium text-foreground shadow-sm outline-none transition hover:border-primary focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
-                        >
-                          <span>{displayDate}</span>
-                        </Popover.Button>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-150"
-                          enterFrom="opacity-0 translate-y-1"
-                          enterTo="opacity-100 translate-y-0"
-                          leave="transition ease-in duration-100"
-                          leaveFrom="opacity-100 translate-y-0"
-                          leaveTo="opacity-0 translate-y-1"
-                        >
-                          <Popover.Panel className="absolute left-0 right-0 z-20 mt-2 rounded-[var(--radius-lg)] border border-border/70 bg-surface shadow-[var(--shadow-soft)]">
-                            <div className="flex items-center justify-between px-4 py-3">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setPickerMonth((prev) => addMonths(prev, -1))
-                                }
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-surface-muted"
-                              >
-                                <CaretLeft size={16} weight="bold" />
-                              </button>
-                              <span className="text-sm font-semibold text-foreground">
-                                {format(pickerMonth, "yyyy년 M월", { locale: ko })}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setPickerMonth((prev) => addMonths(prev, 1))
-                                }
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-surface-muted"
-                              >
-                                <CaretLeft
-                                  size={16}
-                                  weight="bold"
-                                  className="rotate-180"
-                                />
-                              </button>
-                            </div>
-                            <div className="grid grid-cols-7 gap-1 px-4 text-center text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                              {["월", "화", "수", "목", "금", "토", "일"].map((label) => (
-                                <span key={label}>{label}</span>
-                              ))}
-                            </div>
-                            <div className="grid grid-cols-7 gap-1 px-4 pb-4">
-                              {monthMatrix.flat().map((day) => {
-                                const isCurrentMonth = isSameMonth(day, pickerMonth);
-                                const isSelected = isSameDay(day, selectedDate);
-                                const isToday = isSameDay(day, new Date());
-
-                                return (
-                                  <button
-                                    key={day.toISOString()}
-                                    type="button"
-                                    onClick={() => {
-                                      setValue(
-                                        "date",
-                                        format(day, "yyyy-MM-dd"),
-                                        { shouldDirty: true },
-                                      );
-                                      close();
-                                    }}
-                                    className={cn(
-                                      "flex aspect-square items-center justify-center rounded-[var(--radius-sm)] text-sm transition",
-                                      isCurrentMonth
-                                        ? "text-foreground"
-                                        : "text-muted",
-                                      isSelected
-                                        ? "bg-primary text-white shadow"
-                                        : isToday
-                                          ? "border border-primary/40"
-                                          : "hover:bg-surface-muted",
-                                    )}
-                                  >
-                                    {format(day, "d", { locale: ko })}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </Popover.Panel>
-                        </Transition>
-                      </>
-                    )}
-                  </Popover>
+                  <input
+                    type="date"
+                    className={cn(inputClass, "h-11")}
+                    {...register("date", {
+                      required: "일자를 선택해 주세요.",
+                    })}
+                  />
+                  <p className="mt-1 text-xs text-muted">{displayDate}</p>
+                  {errors.date ? (
+                    <p className="mt-1 text-xs text-danger">
+                      {errors.date.message}
+                    </p>
+                  ) : null}
                 </Field>
                 <Field label="장소" icon={<MapPin size={16} />}>
                   <input
@@ -379,7 +277,7 @@ export function EventComposer({
                 </label>
                 <textarea
                   rows={4}
-                  placeholder="곡목, 파트, 준비물 등 필요한 정보를 메모하세요."
+                  placeholder="곡 목록, 파트, 준비물 등 필요한 정보를 메모하세요."
                   className="w-full resize-none rounded-[var(--radius-md)] border border-border/70 bg-surface px-4 py-3 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
                   {...register("description")}
                 />
@@ -612,7 +510,9 @@ function buildDefaultValues(
         ? "until"
         : "none",
     count: event?.recurrence?.count,
-    until: event?.recurrence?.until,
+    until: event?.recurrence?.until
+      ? format(new Date(event.recurrence.until), "yyyy-MM-dd")
+      : undefined,
   };
 }
 
@@ -641,7 +541,7 @@ function buildRecurrence(values: FormValues): RecurrenceFormState {
   }
 
   if (values.repeatMode === "until" && values.until) {
-    recurrence.until = values.until;
+    recurrence.until = new Date(values.until).toISOString();
   }
 
   return recurrence;

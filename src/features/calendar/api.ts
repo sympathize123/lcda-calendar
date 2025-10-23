@@ -64,8 +64,12 @@ export async function createEvent(payload: EventFormPayload) {
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.error ?? "Failed to create event");
+    const errorBody = await res.json().catch(() => ({}));
+    const error = new Error(errorBody.error ?? "Failed to create event") as Error & {
+      status?: number;
+    };
+    error.status = res.status;
+    throw error;
   }
 }
 
@@ -79,8 +83,12 @@ export async function updateEvent(id: string, payload: EventFormPayload) {
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.error ?? "Failed to update event");
+    const errorBody = await res.json().catch(() => ({}));
+    const error = new Error(errorBody.error ?? "Failed to update event") as Error & {
+      status?: number;
+    };
+    error.status = res.status;
+    throw error;
   }
 }
 
@@ -90,8 +98,12 @@ export async function deleteEvent(id: string) {
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.error ?? "Failed to delete event");
+    const errorBody = await res.json().catch(() => ({}));
+    const error = new Error(errorBody.error ?? "Failed to delete event") as Error & {
+      status?: number;
+    };
+    error.status = res.status;
+    throw error;
   }
 }
 

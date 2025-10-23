@@ -37,6 +37,13 @@ const WEEKDAY_MAP: Record<number, Weekday> = {
   6: RRule.SA,
 };
 
+export class EventConflictError extends Error {
+  constructor(message = "Schedule conflict") {
+    super(message);
+    this.name = "EventConflictError";
+  }
+}
+
 export async function getEventsInRange(start: Date, end: Date) {
   const rawEvents = await prisma.event.findMany({
     where: {
@@ -55,6 +62,20 @@ export async function getEventsInRange(start: Date, end: Date) {
   return expandEvents(rawEvents, start, end);
 }
 
+async function assertNoConflict(
+  start: Date,
+  end: Date,
+  excludeId?: string,
+) {
+  const conflicts = await getEventsInRange(start, end);
+  const hasConflict = conflicts.some(
+    (event) => event.sourceEventId !== excludeId,
+  );
+  if (hasConflict) {
+    throw new EventConflictError("해당 시간에는 이미 예약된 일정이 있습니다.");
+  }
+}
+
 export async function createEvent(payload: {
   title: string;
   description?: string | null;
@@ -65,6 +86,7 @@ export async function createEvent(payload: {
   timezone: string;
   recurrence?: RecurrenceRuleInput | null;
 }) {
+  await assertNoConflict(payload.start, payload.end);
   const record = await prisma.event.create({
     data: {
       title: payload.title,
@@ -96,6 +118,7 @@ export async function updateEvent(
     recurrence?: RecurrenceRuleInput | null;
   },
 ) {
+  await assertNoConflict(payload.start, payload.end, id);
   const updated = await prisma.event.update({
     where: { id },
     data: {

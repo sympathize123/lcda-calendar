@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   addMonths,
   addWeeks,
@@ -29,7 +29,7 @@ import {
   EventDetailDialog,
 } from "./components/event-detail-dialog";
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from "./api";
-import { formatRangeLabel, getEventsForRange, WEEK_STARTS_ON } from "./utils";
+import { eventOverlapsRange, formatRangeLabel, getEventsForRange, WEEK_STARTS_ON } from "./utils";
 
 type ComposerState = {
   open: boolean;
@@ -45,12 +45,26 @@ const INITIAL_COMPOSER_STATE: ComposerState = {
   event: null,
 };
 
+type BannerState = {
+  message: string;
+  tone: "error" | "success";
+};
+
 export function CalendarPage() {
   const [view, setView] = useState<CalendarView>("month");
   const [anchorDate, setAnchorDate] = useState(() => new Date());
   const [composerState, setComposerState] =
     useState<ComposerState>(INITIAL_COMPOSER_STATE);
-const [detailState, setDetailState] = useState<DetailState | null>(null);
+  const [detailState, setDetailState] = useState<DetailState | null>(null);
+  const [banner, setBanner] = useState<BannerState | null>(null);
+
+  useEffect(() => {
+    if (!banner) {
+      return;
+    }
+    const timer = setTimeout(() => setBanner(null), 3000);
+    return () => clearTimeout(timer);
+  }, [banner]);
 
   const range = useMemo(() => getViewRange(view, anchorDate), [view, anchorDate]);
 
@@ -131,6 +145,27 @@ const [detailState, setDetailState] = useState<DetailState | null>(null);
     openComposerFor(startOfDay(anchorDate), "create");
 
   const handleComposerSubmit = async (payload: EventFormPayload) => {
+    const hasConflict = events.some((event) => {
+      if (
+        composerState.mode === "edit" &&
+        composerState.event &&
+        event.sourceEventId === composerState.event.sourceEventId
+      ) {
+        return false;
+      }
+      return eventOverlapsRange(event, payload.start, payload.end);
+    });
+
+    if (hasConflict) {
+      setBanner({
+        message: "해당 시간에는 이미 예약된 일정이 있습니다.",
+        tone: "error",
+      });
+      const conflictError = new Error("SCHEDULE_CONFLICT");
+      conflictError.name = "ScheduleConflictError";
+      throw conflictError;
+    }
+
     try {
       if (composerState.mode === "edit" && composerState.event) {
         await updateMutation.mutateAsync({
@@ -143,7 +178,15 @@ const [detailState, setDetailState] = useState<DetailState | null>(null);
       closeComposer();
     } catch (error) {
       console.error(error);
-      alert("일정 저장에 실패했습니다. 다시 시도해 주세요.");
+      const status = (error as { status?: number }).status;
+      const message =
+        status === 409
+          ? "해당 시간에는 이미 예약된 일정이 있습니다."
+          : error instanceof Error && error.message && error.name !== "ScheduleConflictError"
+            ? error.message
+            : "일정 저장에 실패했습니다. 다시 시도해 주세요.";
+      setBanner({ message, tone: "error" });
+      throw error;
     }
   };
 
@@ -176,6 +219,24 @@ const [detailState, setDetailState] = useState<DetailState | null>(null);
       onCreateEvent={handleCreateShortcut}
       overlayActive={overlayActive}
     >
+      <AnimatePresence>
+        {banner ? (
+          <motion.div
+            key="calendar-banner"
+            initial={{ y: -80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -80, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={`pointer-events-none fixed top-6 left-1/2 z-[120] -translate-x-1/2 rounded-full px-5 py-2 text-sm font-semibold shadow-[var(--shadow-soft)] ${
+              banner.tone === "error"
+                ? "bg-danger text-white"
+                : "bg-primary text-white"
+            }`}
+          >
+            {banner.message}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
       <section className="flex flex-col items-center gap-8">
         <OverviewCard
           upcomingEvent={upcomingEvent}

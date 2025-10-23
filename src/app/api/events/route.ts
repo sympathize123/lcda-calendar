@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   createEvent,
   getEventsInRange,
+  EventConflictError,
   type RecurrenceRuleInput,
 } from "@/server/events/service";
 
@@ -90,6 +91,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Invalid payload", issues: error.flatten() },
         { status: 422 },
+      );
+    }
+    if (error instanceof EventConflictError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 409 },
       );
     }
     return NextResponse.json(

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
   deleteEvent,
+  EventConflictError,
   type RecurrenceRuleInput,
   updateEvent,
 } from "@/server/events/service";
@@ -59,6 +60,12 @@ export async function PATCH(
       return NextResponse.json(
         { error: "Invalid payload", issues: error.flatten() },
         { status: 422 },
+      );
+    }
+    if (error instanceof EventConflictError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 409 },
       );
     }
     return NextResponse.json(
