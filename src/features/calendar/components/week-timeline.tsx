@@ -113,7 +113,7 @@ export function WeekTimeline({
                     })}
                   </div>
 
-                  <div className="pointer-events-none absolute inset-x-1">
+                  <div className="pointer-events-none absolute inset-x-1 inset-y-0">
                     {dayEvents.map((event) => {
                       const clampedStart = event.start < dayStart ? dayStart : event.start;
                       const clampedEnd = event.end > dayEnd ? dayEnd : event.end;
