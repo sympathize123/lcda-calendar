@@ -1,15 +1,36 @@
 "use client";
 
-import { CalendarEvent, EventFormPayload, RecurrenceFormState } from "./types";
+import {
+  CalendarEvent,
+  CalendarMember,
+  EventFormPayload,
+  RecurrenceFormState,
+} from "./types";
+
+export type ClientEventFilters = {
+  categories?: string[];
+  participantIds?: string[];
+  search?: string;
+};
 
 export async function fetchEvents(range: {
   start: Date;
   end: Date;
-}): Promise<CalendarEvent[]> {
+}, filters?: ClientEventFilters): Promise<CalendarEvent[]> {
   const params = new URLSearchParams({
     start: range.start.toISOString(),
     end: range.end.toISOString(),
   });
+
+  filters?.categories?.forEach((category) =>
+    params.append("category", category),
+  );
+  filters?.participantIds?.forEach((participant) =>
+    params.append("participant", participant),
+  );
+  if (filters?.search) {
+    params.set("search", filters.search);
+  }
 
   const res = await fetch(`/api/events?${params.toString()}`);
   if (!res.ok) {
@@ -24,6 +45,7 @@ export async function fetchEvents(range: {
       description?: string | null;
       location?: string | null;
       color: string;
+      category: string;
       start: string;
       end: string;
       timezone: string;
@@ -35,6 +57,12 @@ export async function fetchEvents(range: {
         count?: number;
         until?: string;
       } | null;
+      participants: Array<{
+        id: string;
+        name: string;
+        part?: string | null;
+        contact?: string | null;
+      }>;
     }>;
   };
 
@@ -45,12 +73,19 @@ export async function fetchEvents(range: {
     description: event.description ?? undefined,
     location: event.location ?? undefined,
     color: event.color,
+    category: event.category,
     start: new Date(event.start),
     end: new Date(event.end),
     timezone: event.timezone,
     isRecurring: event.isRecurring,
     recurrenceSummary: event.recurrenceSummary,
     recurrence: event.recurrence ?? undefined,
+    participants: event.participants.map((participant) => ({
+      id: participant.id,
+      name: participant.name,
+      part: participant.part,
+      contact: participant.contact,
+    })),
   }));
 }
 
@@ -113,10 +148,12 @@ function toApiPayload(payload: EventFormPayload) {
     description: payload.description ?? null,
     location: payload.location ?? null,
     color: payload.color,
+    category: payload.category,
     start: payload.start.toISOString(),
     end: payload.end.toISOString(),
     timezone: payload.timezone,
     recurrence: normalizeRecurrence(payload.recurrence),
+    participantIds: payload.participants,
   };
 }
 
@@ -131,4 +168,20 @@ function normalizeRecurrence(recurrence: RecurrenceFormState | undefined) {
     count: recurrence.count ?? undefined,
     until: recurrence.until ?? undefined,
   };
+}
+
+export async function fetchMembers(): Promise<CalendarMember[]> {
+  const res = await fetch("/api/members");
+  if (!res.ok) {
+    throw new Error("Failed to load members");
+  }
+  const data = (await res.json()) as {
+    members: Array<{
+      id: string;
+      name: string;
+      part?: string | null;
+      contact?: string | null;
+    }>;
+  };
+  return data.members;
 }

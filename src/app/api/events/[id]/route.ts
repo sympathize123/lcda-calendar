@@ -16,6 +16,7 @@ const updateSchema = z.object({
   description: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
   color: z.string().min(1),
+  category: z.string().min(1),
   start: z.string().datetime(),
   end: z.string().datetime(),
   timezone: z.string().min(1),
@@ -28,6 +29,7 @@ const updateSchema = z.object({
     })
     .optional()
     .nullable(),
+  participantIds: z.array(z.string().uuid()).optional(),
 });
 
 export async function PATCH(
@@ -47,10 +49,12 @@ export async function PATCH(
       description: parsed.description,
       location: parsed.location,
       color: parsed.color,
+      category: parsed.category,
       start: new Date(parsed.start),
       end: new Date(parsed.end),
       timezone: parsed.timezone,
       recurrence,
+      participantIds: parsed.participantIds,
     });
 
     return NextResponse.json({ status: "ok" });

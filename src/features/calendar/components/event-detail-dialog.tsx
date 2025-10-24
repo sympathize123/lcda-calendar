@@ -4,13 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { CalendarEvent } from "../types";
-import {
-  Clock,
-  MapPin,
-  Repeat,
-  X,
-  CaretLeft,
-} from "phosphor-react";
+import { Clock, MapPin, Repeat, X, CaretLeft, Users, Palette } from "phosphor-react";
 import { getEventsForDay } from "../utils";
 import { ReactNode } from "react";
 
@@ -144,6 +138,32 @@ export function EventDetailDialog({
                     locale: ko,
                   })}
                   {" "}- {format(selectedEvent.end, "HH:mm", { locale: ko })}
+                </InfoRow>
+
+                <InfoRow icon={<Palette size={16} />} label="분류">
+                  {selectedEvent.category}
+                </InfoRow>
+
+                <InfoRow icon={<Users size={16} />} label="참가자">
+                  {selectedEvent.participants.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEvent.participants.map((participant) => (
+                        <span
+                          key={participant.id}
+                          className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-surface px-3 py-1 text-xs font-semibold text-muted"
+                        >
+                          {participant.name}
+                          {participant.part ? (
+                            <span className="text-[0.65rem] uppercase text-muted">
+                              {participant.part}
+                            </span>
+                          ) : null}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted">참가자가 지정되지 않았습니다.</span>
+                  )}
                 </InfoRow>
 
                 {selectedEvent.location ? (

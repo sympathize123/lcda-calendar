@@ -14,10 +14,34 @@ model Event {
   description    String?
   location       String?
   color          String   @default("#1A73E8")
+  category       String   @default("합주")
   start          DateTime
   end            DateTime
   timezone       String   @default("Asia/Seoul")
   recurrenceRule String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  participants   EventParticipant[]
+}
+
+model Member {
+  id        String              @id @default(uuid())
+  name      String
+  part      String?
+  contact   String?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  events    EventParticipant[]
+}
+
+model EventParticipant {
+  id        String   @id @default(uuid())
+  eventId   String
+  memberId  String
+  createdAt DateTime @default(now())
+
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, memberId])
 }

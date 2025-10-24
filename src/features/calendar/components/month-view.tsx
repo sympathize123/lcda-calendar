@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { format, isSameDay, isSameMonth, isToday } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Plus, ArrowsClockwise } from "phosphor-react";
@@ -82,26 +83,33 @@ export function MonthView({
                     </div>
 
                     <div className="mt-2 flex flex-col gap-1">
-                      {dailyEvents.slice(0, 3).map((event) => (
-                        <button
-                          type="button"
-                          key={event.id}
-                          onClick={() => onEventClick?.(event)}
-                          className="group/event relative inline-flex items-center gap-2 overflow-hidden rounded-[var(--radius-sm)] px-2 py-1 text-left text-xs font-medium text-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                          style={{
-                            backgroundColor: event.color,
-                          }}
-                        >
-                          {event.isRecurring ? (
-                            <ArrowsClockwise
-                              weight="bold"
-                              size={12}
-                              className="opacity-90"
-                            />
-                          ) : null}
-                          <span className="truncate">{event.title}</span>
-                        </button>
-                      ))}
+                      <AnimatePresence initial={false}>
+                        {dailyEvents.slice(0, 3).map((event) => (
+                          <motion.button
+                            type="button"
+                            key={event.id}
+                            onClick={() => onEventClick?.(event)}
+                            className="group/event relative inline-flex items-center gap-2 overflow-hidden rounded-[var(--radius-sm)] px-2 py-1 text-left text-xs font-medium text-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                            style={{
+                              backgroundColor: event.color,
+                            }}
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            layout
+                          >
+                            {event.isRecurring ? (
+                              <ArrowsClockwise
+                                weight="bold"
+                                size={12}
+                                className="opacity-90"
+                              />
+                            ) : null}
+                            <span className="truncate">{event.title}</span>
+                          </motion.button>
+                        ))}
+                      </AnimatePresence>
                     </div>
 
                     {overflowCount > 0 ? (

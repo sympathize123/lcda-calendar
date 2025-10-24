@@ -24,16 +24,21 @@ const eventInputSchema = z.object({
   description: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
   color: z.string().min(1),
+  category: z.string().min(1),
   start: z.string().datetime(),
   end: z.string().datetime(),
   timezone: z.string().min(1).default("Asia/Seoul"),
   recurrence: recurrenceSchema,
+  participantIds: z.array(z.string().uuid()).optional(),
 });
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const start = searchParams.get("start");
   const end = searchParams.get("end");
+  const categories = searchParams.getAll("category");
+  const participants = searchParams.getAll("participant");
+  const search = searchParams.get("search") ?? undefined;
 
   if (!start || !end) {
     return NextResponse.json(
@@ -53,7 +58,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const events = await getEventsInRange(rangeStart, rangeEnd);
+    const events = await getEventsInRange(rangeStart, rangeEnd, {
+      categories: categories.length > 0 ? categories : undefined,
+      participantIds: participants.length > 0 ? participants : undefined,
+      search,
+    });
     return NextResponse.json({ events });
   } catch (error) {
     console.error("Failed to fetch events", error);
@@ -78,10 +87,12 @@ export async function POST(request: NextRequest) {
       description: parsed.description,
       location: parsed.location,
       color: parsed.color,
+      category: parsed.category,
       timezone: parsed.timezone,
       start: new Date(parsed.start),
       end: new Date(parsed.end),
       recurrence,
+      participantIds: parsed.participantIds,
     });
 
     return NextResponse.json({ status: "ok" }, { status: 201 });

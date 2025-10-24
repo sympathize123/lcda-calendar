@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   addMonths,
   addWeeks,
@@ -19,8 +19,15 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { MagnifyingGlass } from "phosphor-react";
 import { AppShell } from "@/components/layout/app-shell";
-import { CalendarEvent, CalendarView, EventFormPayload } from "./types";
+import { cn } from "@/lib/utils";
+import {
+  CalendarEvent,
+  CalendarMember,
+  CalendarView,
+  EventFormPayload,
+} from "./types";
 import { EventComposer } from "./components/event-composer";
 import { MonthView } from "./components/month-view";
 import { WeekTimeline } from "./components/week-timeline";
@@ -28,7 +35,13 @@ import {
   DetailState,
   EventDetailDialog,
 } from "./components/event-detail-dialog";
-import { fetchEvents, createEvent, updateEvent, deleteEvent } from "./api";
+import {
+  fetchEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  fetchMembers,
+} from "./api";
 import { eventOverlapsRange, formatRangeLabel, getEventsForRange, WEEK_STARTS_ON } from "./utils";
 
 type ComposerState = {
@@ -45,6 +58,34 @@ const INITIAL_COMPOSER_STATE: ComposerState = {
   event: null,
 };
 
+type FilterState = {
+  categories: string[];
+  participantIds: string[];
+  search: string;
+  dateRange: {
+    from: string | null;
+    to: string | null;
+  };
+};
+
+const INITIAL_FILTER_STATE: FilterState = {
+  categories: [],
+  participantIds: [],
+  search: "",
+  dateRange: {
+    from: null,
+    to: null,
+  },
+};
+
+const CATEGORY_OPTIONS = [
+  { label: "합주", color: "#1A73E8" },
+  { label: "섹션", color: "#0EA5E9" },
+  { label: "회의", color: "#F59E0B" },
+  { label: "특강", color: "#F97316" },
+  { label: "기타", color: "#8B5CF6" },
+];
+
 type BannerState = {
   message: string;
   tone: "error" | "success";
@@ -57,6 +98,7 @@ export function CalendarPage() {
     useState<ComposerState>(INITIAL_COMPOSER_STATE);
   const [detailState, setDetailState] = useState<DetailState | null>(null);
   const [banner, setBanner] = useState<BannerState | null>(null);
+  const [filters, setFilters] = useState<FilterState>(INITIAL_FILTER_STATE);
 
   useEffect(() => {
     if (!banner) {
@@ -68,17 +110,59 @@ export function CalendarPage() {
 
   const range = useMemo(() => getViewRange(view, anchorDate), [view, anchorDate]);
 
+  const effectiveRange = useMemo(() => {
+    const from = filters.dateRange.from
+      ? new Date(`${filters.dateRange.from}T00:00:00`)
+      : range.start;
+    const to = filters.dateRange.to
+      ? new Date(`${filters.dateRange.to}T23:59:59.999`)
+      : range.end;
+
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) {
+      return range;
+    }
+
+    return { start: from, end: to };
+  }, [filters.dateRange, range]);
+
   const queryClient = useQueryClient();
+
+  const filterKey = useMemo(
+    () => [
+      filters.categories.slice().sort().join(","),
+      filters.participantIds.slice().sort().join(","),
+      filters.search,
+      filters.dateRange.from ?? "",
+      filters.dateRange.to ?? "",
+    ],
+    [filters],
+  );
 
   const eventsQuery = useQuery({
     queryKey: [
       "events",
-      range.start.toISOString(),
-      range.end.toISOString(),
+      effectiveRange.start.toISOString(),
+      effectiveRange.end.toISOString(),
+      ...filterKey,
     ],
-    queryFn: () => fetchEvents(range),
+    queryFn: () =>
+      fetchEvents(effectiveRange, {
+        categories: filters.categories.length ? filters.categories : undefined,
+        participantIds: filters.participantIds.length
+          ? filters.participantIds
+          : undefined,
+        search: filters.search || undefined,
+      }),
     staleTime: 30_000,
   });
+
+  const membersQuery = useQuery({
+    queryKey: ["members"],
+    queryFn: fetchMembers,
+    staleTime: 60_000,
+  });
+
+  const members = membersQuery.data ?? [];
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
 
@@ -237,88 +321,97 @@ export function CalendarPage() {
           </motion.div>
         ) : null}
       </AnimatePresence>
-      <section className="flex flex-col items-center gap-8">
-        <OverviewCard
-          upcomingEvent={upcomingEvent}
-          anchorDate={anchorDate}
-          view={view}
-          isLoading={eventsQuery.isLoading}
-        />
+      <section className="flex w-full max-w-[1300px] flex-col gap-8 lg:flex-row lg:items-start">
+        <div className="flex w-full flex-1 flex-col items-center gap-8">
+          <OverviewCard
+            upcomingEvent={upcomingEvent}
+            anchorDate={anchorDate}
+            view={view}
+            isLoading={eventsQuery.isLoading}
+          />
 
-        <div className="w-full max-w-[1100px] rounded-[var(--radius-lg)] border border-border/60 bg-surface shadow-[var(--shadow-soft)]">
-          <div className="flex flex-wrap items-start justify-between gap-4 px-6 pt-6">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">
-                {view === "month" ? "월간 캘린더" : "주간 타임라인"}
-              </h2>
-              {view === "week" ? (
-                <p className="text-sm text-muted">
-                  구글 캘린더형 30분 슬롯 보드. 시간 칸을 클릭하면 해당 슬롯으로
-                  일정 모달이 열립니다.
-                </p>
-              ) : null}
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-surface-muted/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.26em] text-muted">
-              테스트 버젼 1.0V
-            </div>
-          </div>
-
-          <div
-            className="group relative mt-6 overflow-hidden px-2 pb-6 pt-2"
-            onDoubleClick={() => setView(view === "month" ? "week" : "month")}
-            role="presentation"
-          >
-            <div className="pointer-events-none absolute inset-x-6 top-0 flex justify-end text-xs uppercase tracking-[0.24em] text-muted/70">
-              Double Click to Toggle View
+          <div className="w-full max-w-[1100px] rounded-[var(--radius-lg)] border border-border/60 bg-surface shadow-[var(--shadow-soft)]">
+            <div className="flex flex-wrap items-start justify-between gap-4 px-6 pt-6">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  {view === "month" ? "월간 캘린더" : "주간 타임라인"}
+                </h2>
+                {view === "week" ? (
+                  <p className="text-sm text-muted">
+                    구글 캘린더형 30분 슬롯 보드. 시간 칸을 클릭하면 해당 슬롯으로
+                    일정 모달이 열립니다.
+                  </p>
+                ) : null}
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-surface-muted/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.26em] text-muted">
+                테스트 버젼 1.0V
+              </div>
             </div>
 
-            <AnimatePresence mode="wait">
-              {view === "month" ? (
-                <motion.div
-                  key="month-view"
-                  initial={{ opacity: 0, scale: 0.98, y: 16 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, y: -16 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="rounded-[var(--radius-lg)] border border-transparent bg-surface px-2 pb-2 pt-4 sm:px-4 sm:pt-6"
-                >
-                  <MonthView
-                    anchorDate={anchorDate}
-                    events={events}
-                    onEventClick={(event) => {
-                      setAnchorDate(event.start);
-                      setDetailState({ mode: "event", event, date: event.start });
-                    }}
-                    onSelectDay={(date) => openComposerFor(date, "create")}
-                    onShowDayEvents={(date) => {
-                      setAnchorDate(date);
-                      setDetailState({ mode: "day", date });
-                    }}
-                  />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="week-view"
-                  initial={{ opacity: 0, scale: 0.98, y: 16 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, y: -16 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="rounded-[var(--radius-lg)] border border-transparent bg-surface px-2 pb-2 pt-4 sm:px-4 sm:pt-6"
-                >
-                  <WeekTimeline
-                    anchorDate={anchorDate}
-                    events={weekEvents}
-                    onSelectSlot={(date) => openComposerFor(date, "create")}
-                    onEventClick={(event) => {
-                      setAnchorDate(event.start);
-                      setDetailState({ mode: "event", event, date: event.start });
-                    }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div
+              className="group relative mt-6 overflow-hidden px-2 pb-6 pt-2"
+              onDoubleClick={() => setView(view === "month" ? "week" : "month")}
+              role="presentation"
+            >
+              <div className="pointer-events-none absolute inset-x-6 top-0 flex justify-end text-xs uppercase tracking-[0.24em] text-muted/70">
+                Double Click to Toggle View
+              </div>
+
+              <AnimatePresence mode="wait">
+                {view === "month" ? (
+                  <motion.div
+                    key="month-view"
+                    initial={{ opacity: 0, scale: 0.98, y: 16 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, y: -16 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="rounded-[var(--radius-lg)] border border-transparent bg-surface px-2 pb-2 pt-4 sm:px-4 sm:pt-6"
+                  >
+                    <MonthView
+                      anchorDate={anchorDate}
+                      events={events}
+                      onEventClick={(event) => {
+                        setAnchorDate(event.start);
+                        setDetailState({ mode: "event", event, date: event.start });
+                      }}
+                      onSelectDay={(date) => openComposerFor(date, "create")}
+                      onShowDayEvents={(date) => {
+                        setAnchorDate(date);
+                        setDetailState({ mode: "day", date });
+                      }}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="week-view"
+                    initial={{ opacity: 0, scale: 0.98, y: 16 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, y: -16 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="rounded-[var(--radius-lg)] border border-transparent bg-surface px-2 pb-2 pt-4 sm:px-4 sm:pt-6"
+                  >
+                    <WeekTimeline
+                      anchorDate={anchorDate}
+                      events={weekEvents}
+                      onSelectSlot={(date) => openComposerFor(date, "create")}
+                      onEventClick={(event) => {
+                        setAnchorDate(event.start);
+                        setDetailState({ mode: "event", event, date: event.start });
+                      }}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
+
+        <FilterSidebar
+          filters={filters}
+          onChange={setFilters}
+          members={members}
+          isLoading={membersQuery.isLoading}
+        />
       </section>
 
       <EventComposer
@@ -407,6 +500,251 @@ function OverviewCard({
         )}
       </div>
     </div>
+  );
+}
+
+type FilterSidebarProps = {
+  filters: FilterState;
+  onChange: React.Dispatch<React.SetStateAction<FilterState>>;
+  members: CalendarMember[];
+  isLoading: boolean;
+};
+
+function FilterSidebar({ filters, onChange, members, isLoading }: FilterSidebarProps) {
+  const [participantQuery, setParticipantQuery] = useState("");
+  const [localSearch, setLocalSearch] = useState(filters.search);
+  const latestFiltersSearch = useRef(filters.search);
+
+  const filteredMembers = useMemo(() => {
+    if (!participantQuery.trim()) {
+      return members;
+    }
+    const keyword = participantQuery.trim().toLowerCase();
+    return members.filter((member) => {
+      const nameMatch = member.name.toLowerCase().includes(keyword);
+      const partMatch = member.part
+        ? member.part.toLowerCase().includes(keyword)
+        : false;
+      return nameMatch || partMatch;
+    });
+  }, [members, participantQuery]);
+
+  const toggleCategory = (category: string) => {
+    onChange((prev) => {
+      const exists = prev.categories.includes(category);
+      return {
+        ...prev,
+        categories: exists
+          ? prev.categories.filter((item) => item !== category)
+          : [...prev.categories, category],
+      };
+    });
+  };
+
+  const toggleParticipant = (memberId: string) => {
+    onChange((prev) => {
+      const exists = prev.participantIds.includes(memberId);
+      return {
+        ...prev,
+        participantIds: exists
+          ? prev.participantIds.filter((value) => value !== memberId)
+          : [...prev.participantIds, memberId],
+      };
+    });
+  };
+
+  const handleDateChange = (key: "from" | "to", value: string) => {
+    onChange((prev) => ({
+      ...prev,
+      dateRange: {
+        ...prev.dateRange,
+        [key]: value || null,
+      },
+    }));
+  };
+
+  const clearFilters = () => {
+    onChange(() => ({
+      ...INITIAL_FILTER_STATE,
+      dateRange: { ...INITIAL_FILTER_STATE.dateRange },
+    }));
+    setParticipantQuery("");
+    latestFiltersSearch.current = "";
+    setLocalSearch("");
+  };
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      onChange((prev) => {
+        if (prev.search === localSearch) {
+          return prev;
+        }
+        latestFiltersSearch.current = localSearch;
+        return { ...prev, search: localSearch };
+      });
+    }, 200);
+
+    return () => clearTimeout(handler);
+  }, [localSearch, onChange]);
+
+  return (
+    <aside className="lg:w-80 rounded-[var(--radius-lg)] border border-border/60 bg-surface shadow-[var(--shadow-soft)] px-5 py-6 lg:sticky lg:top-24">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-muted">
+          필터
+        </h3>
+        <button
+          type="button"
+          className="text-xs text-muted underline-offset-4 transition hover:text-primary hover:underline"
+          onClick={clearFilters}
+        >
+          초기화
+        </button>
+      </div>
+
+      <div className="mt-6 space-y-6">
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            분류
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {CATEGORY_OPTIONS.map((category) => {
+              const active = filters.categories.includes(category.label);
+              return (
+                <button
+                  key={category.label}
+                  type="button"
+                  onClick={() => toggleCategory(category.label)}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide transition",
+                    active
+                      ? "border-primary bg-primary-soft/60 text-primary"
+                      : "border-border/60 bg-surface text-muted hover:border-primary hover:text-primary",
+                  )}
+                >
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: category.color }}
+                  />
+                  {category.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            참가자
+          </h4>
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-border/60 bg-surface px-3 py-2">
+            <MagnifyingGlass size={16} className="text-muted" />
+            <input
+              type="text"
+              value={participantQuery}
+              onChange={(event) => setParticipantQuery(event.target.value)}
+              placeholder="이름/파트 검색"
+              className="flex-1 bg-transparent text-sm text-foreground outline-none"
+            />
+          </div>
+          <div className="max-h-48 overflow-y-auto rounded-[var(--radius-md)] border border-border/60 bg-surface">
+            {isLoading ? (
+              <p className="px-4 py-6 text-center text-sm text-muted">불러오는 중...</p>
+            ) : filteredMembers.length === 0 ? (
+              <p className="px-4 py-6 text-center text-sm text-muted">
+                등록된 구성원이 없습니다.
+              </p>
+            ) : (
+              filteredMembers.map((member) => {
+                const active = filters.participantIds.includes(member.id);
+                return (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => toggleParticipant(member.id)}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition",
+                      active
+                        ? "bg-primary-soft/60 text-primary"
+                        : "hover:bg-surface-muted",
+                    )}
+                  >
+                    <span className="font-medium">{member.name}</span>
+                    <span className="text-xs text-muted">
+                      {member.part ?? "파트 미지정"}
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+          {filters.participantIds.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {filters.participantIds
+                .map((id) => members.find((member) => member.id === id))
+                .filter(Boolean)
+                .map((member) => (
+                  <span
+                    key={(member as CalendarMember).id}
+                    className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-surface px-3 py-1 text-xs font-semibold text-muted"
+                  >
+                    {(member as CalendarMember).name}
+                    <button
+                      type="button"
+                      className="text-muted transition hover:text-danger"
+                      onClick={() => toggleParticipant((member as CalendarMember).id)}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            기간
+          </h4>
+          <div className="grid grid-cols-1 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-muted">시작일</label>
+              <input
+                type="date"
+                value={filters.dateRange.from ?? ""}
+                onChange={(event) => handleDateChange("from", event.target.value)}
+                className="h-10 rounded-[var(--radius-md)] border border-border/60 bg-surface px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-muted">종료일</label>
+              <input
+                type="date"
+                value={filters.dateRange.to ?? ""}
+                onChange={(event) => handleDateChange("to", event.target.value)}
+                className="h-10 rounded-[var(--radius-md)] border border-border/60 bg-surface px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted">
+            기간을 지정하면 해당 기간에 포함되는 일정만 표시됩니다.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            검색
+          </h4>
+          <input
+            type="text"
+            value={localSearch}
+            onChange={(event) => setLocalSearch(event.target.value)}
+            placeholder="합주 이름 또는 참가자"
+            className="h-10 w-full rounded-[var(--radius-md)] border border-border/60 bg-surface px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+          />
+        </div>
+      </div>
+    </aside>
   );
 }
 

@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowsClockwise } from "phosphor-react";
 import {
   endOfDay,
   format,
@@ -114,34 +116,45 @@ export function WeekTimeline({
                   </div>
 
                   <div className="pointer-events-none absolute inset-x-1 inset-y-0">
-                    {dayEvents.map((event) => {
-                      const clampedStart = event.start < dayStart ? dayStart : event.start;
-                      const clampedEnd = event.end > dayEnd ? dayEnd : event.end;
-                      const startSlot = Math.max(0, Math.min(getSlotIndex(clampedStart), TOTAL_SLOTS));
-                      const endSlot = Math.max(startSlot + 1, Math.min(getSlotIndex(clampedEnd), TOTAL_SLOTS));
-                      const span = Math.max(endSlot - startSlot, 1);
-                      const top = `${(startSlot / TOTAL_SLOTS) * 100}%`;
-                      const height = `${(span / TOTAL_SLOTS) * 100}%`;
+                    <AnimatePresence initial={false}>
+                      {dayEvents.map((event) => {
+                        const clampedStart = event.start < dayStart ? dayStart : event.start;
+                        const clampedEnd = event.end > dayEnd ? dayEnd : event.end;
+                        const startSlot = Math.max(0, Math.min(getSlotIndex(clampedStart), TOTAL_SLOTS));
+                        const endSlot = Math.max(startSlot + 1, Math.min(getSlotIndex(clampedEnd), TOTAL_SLOTS));
+                        const span = Math.max(endSlot - startSlot, 1);
+                        const top = `${(startSlot / TOTAL_SLOTS) * 100}%`;
+                        const height = `${(span / TOTAL_SLOTS) * 100}%`;
 
-                      return (
-                        <button
-                          type="button"
-                          key={event.id}
-                          style={{ top, height, backgroundColor: event.color }}
-                          className="pointer-events-auto absolute left-0 right-0 z-20 mx-1 flex flex-col gap-1 overflow-hidden rounded-[var(--radius-sm)] px-2 py-1 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEventClick?.(event);
-                          }}
-                        >
-                          <span className="truncate">{event.title}</span>
-                          <span className="text-[0.65rem] font-normal text-white/80">
-                            {format(event.start, "HH:mm")} -{" "}
-                            {format(event.end, "HH:mm")}
+                        return (
+                          <motion.button
+                            type="button"
+                            key={event.id}
+                            style={{ top, height, backgroundColor: event.color }}
+                            className="pointer-events-auto absolute left-0 right-0 z-20 mx-1 flex flex-col gap-1 overflow-hidden rounded-[var(--radius-sm)] px-2 py-1 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEventClick?.(event);
+                            }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                          >
+                          <span className="flex items-center gap-1 truncate">
+                            {event.isRecurring ? (
+                              <ArrowsClockwise size={12} weight="bold" className="opacity-80" />
+                            ) : null}
+                            <span className="truncate">{event.title}</span>
                           </span>
-                        </button>
+                            <span className="text-[0.65rem] font-normal text-white/80">
+                              {format(event.start, "HH:mm")} -{" "}
+                              {format(event.end, "HH:mm")}
+                            </span>
+                          </motion.button>
                       );
-                    })}
+                      })}
+                    </AnimatePresence>
                   </div>
 
                   {isCurrentWeek && isSameDay(day, now) ? (
