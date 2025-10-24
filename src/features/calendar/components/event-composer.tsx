@@ -253,7 +253,14 @@ export function EventComposer({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,740px)] -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-lg)] border border-border/60 bg-surface-elevated p-6 shadow-[var(--shadow-soft)] focus:outline-none">
+        <Dialog.Content
+          className={cn(
+            "fixed inset-x-3 top-6 bottom-6 z-50 mx-auto flex w-auto max-w-[740px] flex-col rounded-[var(--radius-lg)] border border-border/60 bg-surface-elevated shadow-[var(--shadow-soft)] focus:outline-none",
+            "p-5 sm:p-6",
+            "max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto",
+            "md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:w-[min(92vw,740px)] md:-translate-x-1/2 md:-translate-y-1/2",
+          )}
+        >
           <header className="flex items-start justify-between gap-4 border-b border-border/60 pb-4">
             <div className="flex flex-col gap-2">
               <Dialog.Title className="text-xl font-semibold text-foreground">
