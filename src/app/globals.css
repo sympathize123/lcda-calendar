@@ -16,6 +16,7 @@
   --success: #16a34a;
   --warning: #f59e0b;
   --today: #ef4444;
+  --today-contrast: #111827;
   --slot: #f5f9ff;
   --shadow-soft: 0px 24px 56px -32px rgba(15, 23, 42, 0.35);
   --shadow-ring: 0 0 0 1px rgba(26, 115, 232, 0.12);
@@ -52,6 +53,7 @@
   --success: #34d399;
   --warning: #fbbf24;
   --today: #f87171;
+  --today-contrast: #0f172a;
   --slot: rgba(56, 189, 248, 0.12);
   --shadow-soft: 0px 18px 50px -30px rgba(8, 47, 73, 0.55);
 }

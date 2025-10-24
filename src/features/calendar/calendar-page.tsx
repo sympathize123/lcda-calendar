@@ -154,6 +154,7 @@ export function CalendarPage() {
         search: filters.search || undefined,
       }),
     staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   const membersQuery = useQuery({
@@ -183,6 +184,50 @@ export function CalendarPage() {
       .filter((event) => compareAsc(event.end, now) >= 0)
       .sort((a, b) => compareAsc(a.start, b.start))[0];
   }, [events]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof EventSource === "undefined") {
+      return;
+    }
+
+    let eventSource: EventSource | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const connect = () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+      eventSource = new EventSource("/api/events/stream", { withCredentials: false });
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as { type?: string };
+          if (data.type === "events:changed") {
+            queryClient.invalidateQueries({ queryKey: ["events"] });
+          }
+        } catch {
+          // ignore malformed payloads
+        }
+      };
+      eventSource.onerror = () => {
+        eventSource?.close();
+        if (!retryTimer) {
+          retryTimer = setTimeout(() => {
+            retryTimer = null;
+            connect();
+          }, 5000);
+        }
+      };
+    };
+
+    connect();
+
+    return () => {
+      eventSource?.close();
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+      }
+    };
+  }, [queryClient]);
 
   const createMutation = useMutation({
     mutationFn: (payload: EventFormPayload) => createEvent(payload),
@@ -228,6 +273,9 @@ export function CalendarPage() {
   const handleCreateShortcut = () =>
     openComposerFor(startOfDay(anchorDate), "create");
 
+  const overlapsExistingEvent = (event: CalendarEvent, start: Date, end: Date) =>
+    event.start.getTime() < end.getTime() && event.end.getTime() > start.getTime();
+
   const handleComposerSubmit = async (payload: EventFormPayload) => {
     const hasConflict = events.some((event) => {
       if (
@@ -237,7 +285,7 @@ export function CalendarPage() {
       ) {
         return false;
       }
-      return eventOverlapsRange(event, payload.start, payload.end);
+      return overlapsExistingEvent(event, payload.start, payload.end);
     });
 
     if (hasConflict) {

@@ -2,6 +2,7 @@ import { differenceInMilliseconds, isWithinInterval, addMonths } from "date-fns"
 import { ko } from "date-fns/locale";
 import { RRule, Weekday } from "rrule";
 import { prisma } from "@/server/db/client";
+import { emitEventsChanged } from "./event-bus";
 import type { Event, EventParticipant, Member } from "@/generated/prisma";
 import { format } from "date-fns";
 
@@ -145,11 +146,14 @@ async function assertNoConflict(
     }
     const conflictStart = new Date(conflict.start);
     const conflictEnd = new Date(conflict.end);
-    const overlaps = candidateOccurrences.some(
-      (occurrence) =>
-        occurrence.start.getTime() <= conflictEnd.getTime() &&
-        occurrence.end.getTime() >= conflictStart.getTime(),
-    );
+    const overlaps = candidateOccurrences.some((occurrence) => {
+      const occurrenceStart = occurrence.start.getTime();
+      const occurrenceEnd = occurrence.end.getTime();
+      return (
+        occurrenceStart < conflictEnd.getTime() &&
+        occurrenceEnd > conflictStart.getTime()
+      );
+    });
     if (overlaps) {
       throw new EventConflictError("해당 시간에는 이미 예약된 일정이 있습니다.");
     }
@@ -200,8 +204,9 @@ export async function createEvent(payload: {
       },
     },
   });
-
-  return expandEvents([record], payload.start, payload.end);
+  const occurrences = expandEvents([record], payload.start, payload.end);
+  emitEventsChanged({ scope: "events" });
+  return occurrences;
 }
 
 export async function updateEvent(
@@ -252,13 +257,16 @@ export async function updateEvent(
       },
     },
   });
-  return expandEvents([updated], payload.start, payload.end);
+  const occurrences = expandEvents([updated], payload.start, payload.end);
+  emitEventsChanged({ scope: "events" });
+  return occurrences;
 }
 
 export async function deleteEvent(id: string) {
   await prisma.event.delete({
     where: { id },
   });
+  emitEventsChanged({ scope: "events" });
 }
 
 function expandEvents(

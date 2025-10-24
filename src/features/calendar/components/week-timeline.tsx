@@ -92,7 +92,7 @@ export function WeekTimeline({
                     className={cn(
                       "text-base font-semibold text-foreground",
                       isTodayColumn &&
-                        "inline-flex min-w-[3rem] items-center justify-center rounded-full bg-color-today px-3 py-1 text-white shadow-sm",
+                        "inline-flex min-w-[3rem] items-center justify-center rounded-full bg-color-today px-3 py-1 text-[color:var(--today-contrast)] shadow-sm",
                     )}
                   >
                     {format(day, "M/d", { locale: ko })}
@@ -158,20 +158,30 @@ export function WeekTimeline({
 
                     <div className="pointer-events-none absolute inset-x-1 inset-y-0">
                       <AnimatePresence initial={false}>
-                        {dayEvents.map((event) => {
-                          const clampedStart = event.start < dayStart ? dayStart : event.start;
-                          const clampedEnd = event.end > dayEnd ? dayEnd : event.end;
-                          const startSlot = Math.max(0, Math.min(getSlotIndex(clampedStart), TOTAL_SLOTS));
-                          const endSlot = Math.max(startSlot + 1, Math.min(getSlotIndex(clampedEnd), TOTAL_SLOTS));
-                          const span = Math.max(endSlot - startSlot, 1);
-                          const top = `${(startSlot / TOTAL_SLOTS) * 100}%`;
-                          const height = `${(span / TOTAL_SLOTS) * 100}%`;
+                      {dayEvents.map((event) => {
+                        const clampedStart = event.start < dayStart ? dayStart : event.start;
+                        const clampedEnd = event.end > dayEnd ? dayEnd : event.end;
+                        const startSlot = Math.max(0, Math.min(getSlotIndex(clampedStart), TOTAL_SLOTS));
+                        const endSlot = Math.max(startSlot + 1, Math.min(getSlotIndex(clampedEnd), TOTAL_SLOTS));
+                        const span = Math.max(endSlot - startSlot, 1);
+                        const top = `${(startSlot / TOTAL_SLOTS) * 100}%`;
+                        const height = `${(span / TOTAL_SLOTS) * 100}%`;
+                        const gapPx = 2;
+                        const topGapPx = startSlot > 0 ? gapPx : 0;
+                        const bottomGapPx = endSlot < TOTAL_SLOTS ? gapPx : 0;
+                        const topStyle = topGapPx
+                          ? `calc(${top} + ${topGapPx}px)`
+                          : top;
+                        const heightStyle =
+                          topGapPx || bottomGapPx
+                            ? `calc(${height} - ${topGapPx + bottomGapPx}px)`
+                            : height;
 
-                          return (
-                            <motion.button
-                              type="button"
-                              key={event.id}
-                              style={{ top, height, backgroundColor: event.color }}
+                        return (
+                          <motion.button
+                            type="button"
+                            key={event.id}
+                            style={{ top: topStyle, height: heightStyle, backgroundColor: event.color }}
                               className="pointer-events-auto absolute left-0 right-0 z-20 mx-1 flex flex-col gap-1 overflow-hidden rounded-[var(--radius-sm)] px-2 py-1 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
                               onClick={(e) => {
                                 e.stopPropagation();

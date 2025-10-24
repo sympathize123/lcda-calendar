@@ -72,7 +72,7 @@ export function MonthView({
                         className={cn(
                           "flex h-8 w-8 items-center justify-center rounded-full text-sm transition",
                           today
-                            ? "bg-color-today text-white shadow-md"
+                            ? "bg-color-today text-[color:var(--today-contrast)] shadow-md"
                             : "text-foreground",
                         )}
                       >

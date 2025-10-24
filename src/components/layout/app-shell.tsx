@@ -65,7 +65,7 @@ export function AppShell({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 justify-end">
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end">
             <div className="hidden items-center gap-1 rounded-full border border-border/70 bg-surface px-1.5 py-1 shadow-sm sm:flex">
               <button
                 type="button"
@@ -93,7 +93,7 @@ export function AppShell({
               팀원·연습실 검색
             </div>
 
-            <div className="inline-flex items-center gap-1 rounded-full bg-surface px-1 py-1 shadow-sm">
+            <div className="inline-flex items-center gap-1 rounded-full bg-surface px-1 py-1 shadow-sm w-full sm:w-auto">
               <ToggleButton
                 active={view === "month"}
                 label="월간"
@@ -109,7 +109,7 @@ export function AppShell({
             <button
               type="button"
               onClick={onCreateEvent}
-              className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+              className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface sm:w-auto"
             >
               <Plus size={18} weight="bold" />
               새 일정
@@ -119,7 +119,7 @@ export function AppShell({
               type="button"
               onClick={toggleTheme}
               aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface text-muted transition hover:border-transparent hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+              className="inline-flex h-10 w-10 self-end items-center justify-center rounded-full border border-border/70 bg-surface text-muted transition hover:border-transparent hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface sm:self-auto"
             >
               {isDark ? <Sun size={18} weight="bold" /> : <Moon size={18} weight="bold" />}
             </button>
@@ -155,7 +155,7 @@ function ToggleButton({ label, active, onClick }: ToggleButtonProps) {
       onClick={onClick}
       data-state={active ? "active" : "inactive"}
       className={cn(
-        "inline-flex h-9 min-w-[68px] items-center justify-center rounded-full px-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
+        "inline-flex h-9 min-w-[68px] flex-1 items-center justify-center rounded-full px-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface sm:flex-none",
         active
           ? "bg-primary text-white shadow-sm"
           : "text-muted hover:bg-primary-soft hover:text-primary",
