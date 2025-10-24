@@ -1,14 +1,19 @@
+"use client";
+
 import {
   ArrowsLeftRight,
   CalendarCheck,
   CaretLeft,
   CaretRight,
   MagnifyingGlass,
+  Moon,
   Plus,
+  Sun,
 } from "phosphor-react";
 import { ReactNode } from "react";
 import { CalendarView } from "@/features/calendar/types";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/theme-provider";
 
 type AppShellProps = {
   children: ReactNode;
@@ -33,11 +38,14 @@ export function AppShell({
   onCreateEvent,
   overlayActive = false,
 }: AppShellProps) {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header
         data-overlay-active={overlayActive}
-        className="sticky top-0 z-40 border-b border-border/60 bg-surface/95 backdrop-blur-md transition-all duration-300 ease-out data-[overlay-active=true]:-translate-y-20 data-[overlay-active=true]:pointer-events-none data-[overlay-active=true]:opacity-0"
+        className="sticky top-0 z-40 border-b border-border/60 bg-surface/95 pt-[var(--safe-area-top)] backdrop-blur-md transition-all duration-300 ease-out data-[overlay-active=true]:-translate-y-20 data-[overlay-active=true]:pointer-events-none data-[overlay-active=true]:opacity-0"
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
@@ -57,7 +65,7 @@ export function AppShell({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 justify-end">
             <div className="hidden items-center gap-1 rounded-full border border-border/70 bg-surface px-1.5 py-1 shadow-sm sm:flex">
               <button
                 type="button"
@@ -101,10 +109,19 @@ export function AppShell({
             <button
               type="button"
               onClick={onCreateEvent}
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+              className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             >
               <Plus size={18} weight="bold" />
               새 일정
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface text-muted transition hover:border-transparent hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            >
+              {isDark ? <Sun size={18} weight="bold" /> : <Moon size={18} weight="bold" />}
             </button>
 
             <div className="hidden h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-surface text-muted transition hover:border-transparent hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface lg:inline-flex">
@@ -115,7 +132,7 @@ export function AppShell({
       </header>
       <main
         className={cn(
-          "mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-12 pt-6 sm:px-6 lg:px-8",
+          "mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-[calc(var(--safe-area-bottom)+3rem)] pt-6 sm:px-6 lg:px-8",
           className,
         )}
       >

@@ -255,10 +255,11 @@ export function EventComposer({
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in" />
         <Dialog.Content
           className={cn(
-            "fixed inset-x-3 top-6 bottom-6 z-50 mx-auto flex w-auto max-w-[740px] flex-col rounded-[var(--radius-lg)] border border-border/60 bg-surface-elevated shadow-[var(--shadow-soft)] focus:outline-none",
+            "fixed inset-x-3 z-50 mx-auto flex w-auto max-w-[740px] flex-col rounded-[var(--radius-lg)] border border-border/60 bg-surface-elevated shadow-[var(--shadow-soft)] focus:outline-none",
+            "top-[var(--safe-area-top-offset)] bottom-[var(--safe-area-bottom-offset)]",
             "p-5 sm:p-6",
-            "max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto",
-            "md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:w-[min(92vw,740px)] md:-translate-x-1/2 md:-translate-y-1/2",
+            "max-h-[calc(100vh-var(--safe-area-top-offset)-var(--safe-area-bottom-offset))] overflow-y-auto",
+            "md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:w-[min(92vw,740px)] md:max-h-[min(90vh,720px)] md:-translate-x-1/2 md:-translate-y-1/2",
           )}
         >
           <header className="flex items-start justify-between gap-4 border-b border-border/60 pb-4">

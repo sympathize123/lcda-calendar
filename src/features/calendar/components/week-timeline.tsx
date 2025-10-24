@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowsClockwise } from "phosphor-react";
@@ -65,6 +67,8 @@ export function WeekTimeline({
     return `calc(${currentMinutes} * (100% / 1440))`;
   }, [now]);
 
+  const today = now ?? new Date();
+
   return (
     <div className="min-h-[640px] overflow-x-auto rounded-[var(--radius-lg)] border border-border/60 bg-surface shadow-[var(--shadow-soft)]">
       <div className="min-w-[860px]" style={{ minWidth: MIN_TIMELINE_WIDTH }}>
@@ -73,14 +77,29 @@ export function WeekTimeline({
             Time
           </div>
           <div className="grid grid-cols-7 border-b border-border/60 bg-surface-muted text-center text-xs font-semibold uppercase tracking-[0.22em] text-muted">
-            {weekDays.map((day) => (
-              <div key={day.toISOString()} className="flex flex-col gap-1 py-3">
-                <span>{format(day, "EEE", { locale: ko })}</span>
-                <span className="text-base font-semibold text-foreground">
-                  {format(day, "M/d", { locale: ko })}
-                </span>
-              </div>
-            ))}
+            {weekDays.map((day) => {
+              const isTodayColumn = isSameDay(day, today);
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={cn(
+                    "flex flex-col items-center gap-1 py-3",
+                    isTodayColumn && "text-color-today",
+                  )}
+                >
+                  <span>{format(day, "EEE", { locale: ko })}</span>
+                  <span
+                    className={cn(
+                      "text-base font-semibold text-foreground",
+                      isTodayColumn &&
+                        "inline-flex min-w-[3rem] items-center justify-center rounded-full bg-color-today px-3 py-1 text-white shadow-sm",
+                    )}
+                  >
+                    {format(day, "M/d", { locale: ko })}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -109,6 +128,7 @@ export function WeekTimeline({
                 const dayEvents = events
                   .filter((event) => eventOverlapsRange(event, dayStart, dayEnd))
                   .sort((a, b) => a.start.getTime() - b.start.getTime());
+                const isTodayColumn = isSameDay(day, today);
 
                 return (
                   <div
