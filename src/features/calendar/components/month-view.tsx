@@ -7,6 +7,8 @@ import { CalendarEvent } from "../types";
 import { getEventsForDay, getMonthMatrix, getWeekDays } from "../utils";
 import { cn } from "@/lib/utils";
 
+const MIN_MONTH_VIEW_WIDTH = 720;
+
 type MonthViewProps = {
   anchorDate: Date;
   events: CalendarEvent[];
@@ -27,108 +29,117 @@ export function MonthView({
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
   return (
-    <div className="flex h-full min-h-[640px] flex-col gap-4">
-      <div className="grid grid-cols-7 gap-2 px-4 text-xs font-semibold uppercase tracking-[0.22em] text-muted">
-        {weekDays.map((day) => (
-          <div className="text-center" key={day.toISOString()}>
-            {format(day, "EEE", { locale: ko })}
+    <div className="flex h-full min-h-[640px] flex-col">
+      <div
+        className="overflow-x-auto"
+      >
+        <div
+          className="min-w-[720px] space-y-4"
+          style={{ minWidth: MIN_MONTH_VIEW_WIDTH }}
+        >
+          <div className="grid grid-cols-7 gap-2 px-4 text-xs font-semibold uppercase tracking-[0.22em] text-muted">
+            {weekDays.map((day) => (
+              <div className="text-center" key={day.toISOString()}>
+                {format(day, "EEE", { locale: ko })}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="flex flex-col gap-3 px-4 pb-6">
-        {monthMatrix.map((week, weekIndex) => (
-          <Fragment key={`week-${weekIndex}`}>
-            <div className="grid grid-cols-7 gap-2">
-              {week.map((day) => {
-                const dailyEvents = getEventsForDay(events, day);
-                const overflowCount = Math.max(0, dailyEvents.length - 3);
-                const label = format(day, "yyyy년 M월 d일", { locale: ko });
+          <div className="flex flex-col gap-3 px-4 pb-6">
+            {monthMatrix.map((week, weekIndex) => (
+              <Fragment key={`week-${weekIndex}`}>
+                <div className="grid grid-cols-7 gap-2">
+                  {week.map((day) => {
+                    const dailyEvents = getEventsForDay(events, day);
+                    const overflowCount = Math.max(0, dailyEvents.length - 3);
+                    const label = format(day, "yyyy년 M월 d일", { locale: ko });
 
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className={cn(
-                      "group relative flex min-h-[140px] flex-col gap-2 overflow-hidden rounded-[var(--radius-md)] border border-border/60 bg-surface-elevated p-3 shadow-sm transition hover:border-primary/50 hover:shadow-md",
-                      !isSameMonth(day, anchorDate) && "bg-surface-muted text-muted",
-                    )}
-                    onDoubleClick={() => onSelectDay(day)}
-                    onMouseEnter={() => setHoveredDate(day)}
-                    onMouseLeave={() => setHoveredDate(null)}
-                  >
-                    <div className="flex items-start justify-between gap-2 text-sm font-semibold">
-                      <span
+                    return (
+                      <div
+                        key={day.toISOString()}
                         className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-full text-sm transition",
-                          isToday(day)
-                            ? "bg-color-today text-black shadow-md"
-                            : "text-foreground",
+                          "group relative flex min-h-[140px] flex-col gap-2 overflow-hidden rounded-[var(--radius-md)] border border-border/60 bg-surface-elevated p-3 shadow-sm transition hover:border-primary/50 hover:shadow-md",
+                          !isSameMonth(day, anchorDate) && "bg-surface-muted text-muted",
                         )}
+                        onDoubleClick={() => onSelectDay(day)}
+                        onMouseEnter={() => setHoveredDate(day)}
+                        onMouseLeave={() => setHoveredDate(null)}
                       >
-                        {format(day, "d", { locale: ko })}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => onSelectDay(day)}
-                        aria-label={`${label} 일정 추가`}
-                        className={cn(
-                          "inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-sm transition hover:bg-primary/90 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
-                          hoveredDate && isSameDay(hoveredDate, day)
-                            ? "opacity-100"
-                            : "",
-                        )}
-                      >
-                        <Plus size={16} weight="bold" />
-                      </button>
-                    </div>
-
-                    <div className="mt-2 flex flex-col gap-1">
-                      <AnimatePresence initial={false}>
-                        {dailyEvents.slice(0, 3).map((event) => (
-                          <motion.button
-                            type="button"
-                            key={event.id}
-                            onClick={() => onEventClick?.(event)}
-                            className="group/event relative inline-flex items-center gap-2 overflow-hidden rounded-[var(--radius-sm)] px-2 py-1 text-left text-xs font-medium text-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                            style={{
-                              backgroundColor: event.color,
-                            }}
-                            initial={{ opacity: 0, y: -6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -6 }}
-                            transition={{ duration: 0.18, ease: "easeOut" }}
-                            layout
+                        <div className="flex items-start justify-between gap-2 text-sm font-semibold">
+                          <span
+                            className={cn(
+                              "flex h-8 w-8 items-center justify-center rounded-full text-sm transition",
+                              isToday(day)
+                                ? "bg-color-today text-black shadow-md"
+                                : "text-foreground",
+                            )}
                           >
-                            {event.isRecurring ? (
-                              <ArrowsClockwise
-                                weight="bold"
-                                size={12}
-                                className="opacity-90"
-                              />
-                            ) : null}
-                            <span className="truncate">{event.title}</span>
-                          </motion.button>
-                        ))}
-                      </AnimatePresence>
-                    </div>
+                            {format(day, "d", { locale: ko })}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => onSelectDay(day)}
+                            aria-label={`${label} 일정 추가`}
+                            className={cn(
+                              "inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white opacity-0 shadow-sm transition hover:bg-primary/90 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
+                              hoveredDate && isSameDay(hoveredDate, day)
+                                ? "opacity-100"
+                                : "",
+                            )}
+                          >
+                            <Plus size={16} weight="bold" />
+                          </button>
+                        </div>
 
-                    {overflowCount > 0 ? (
-                      <button
-                        type="button"
-                        className="text-left text-xs font-medium text-primary underline-offset-2 hover:underline"
-                        onClick={() => onShowDayEvents?.(day)}
-                      >
-                        + {overflowCount}개의 일정 더보기
-                      </button>
-                    ) : null}
+                        <div className="mt-2 flex flex-col gap-1">
+                          <AnimatePresence initial={false}>
+                            {dailyEvents.slice(0, 3).map((event) => (
+                              <motion.button
+                                type="button"
+                                key={event.id}
+                                onClick={() => onEventClick?.(event)}
+                                className="group/event relative inline-flex items-center gap-2 overflow-hidden rounded-[var(--radius-sm)] px-2 py-1 text-left text-xs font-medium text-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                                style={{
+                                  backgroundColor: event.color,
+                                }}
+                                initial={{ opacity: 0, y: -6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.18, ease: "easeOut" }}
+                                layout
+                              >
+                                {event.isRecurring ? (
+                                  <ArrowsClockwise
+                                    weight="bold"
+                                    size={12}
+                                    className="opacity-90"
+                                  />
+                                ) : null}
+                                <span className="truncate">{event.title}</span>
+                              </motion.button>
+                            ))}
+                          </AnimatePresence>
+                        </div>
 
-                    <div className="pointer-events-none absolute inset-0 rounded-[var(--radius-md)] ring-0 ring-primary/10 transition group-hover:ring-4" />
-                  </div>
-                );
-              })}
-            </div>
-          </Fragment>
-        ))}
+                        {overflowCount > 0 ? (
+                          <button
+                            type="button"
+                            className="text-left text-xs font-medium text-primary underline-offset-2 hover:underline"
+                            onClick={() => onShowDayEvents?.(day)}
+                          >
+                            + {overflowCount}개의 일정 더보기
+                          </button>
+                        ) : null}
+
+                        <div className="pointer-events-none absolute inset-0 rounded-[var(--radius-md)] ring-0 ring-primary/10 transition group-hover:ring-4" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </Fragment>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

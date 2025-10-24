@@ -388,31 +388,18 @@ function formatWeekday(day: number) {
 }
 
 function buildSearchPatterns(input: string) {
-  const tokens = input
+  return input
     .split(/\s+/)
-    .map((token) => token.trim())
+    .map((token) => token.trim().toLowerCase())
     .filter((token) => token.length > 0);
+}
 
-  const patterns = new Set<string>();
-
-  for (const token of tokens) {
-    patterns.add(token);
-    if (token.length >= 3) {
-      const sliceLength = Math.max(2, Math.ceil(token.length * 0.6));
-      patterns.add(token.slice(0, sliceLength));
-      patterns.add(token.slice(-sliceLength));
-    }
-  }
-
-  if (tokens.length > 1) {
-    patterns.add(tokens.join(" "));
-  }
-
-  return Array.from(patterns).map((pattern) => pattern.toLowerCase());
+function sanitizeForLooseMatch(value: string) {
+  return value.replace(/[\s0-9]/g, "");
 }
 
 function matchesSearch(event: CalendarEventResponse, patterns: string[]) {
-  const haystacks = [
+  const combined = [
     event.title,
     event.description ?? "",
     event.location ?? "",
@@ -427,7 +414,17 @@ function matchesSearch(event: CalendarEventResponse, patterns: string[]) {
     .join(" ")
     .toLowerCase();
 
-  return patterns.some((pattern) => haystacks.includes(pattern));
+  const sanitizedCombined = sanitizeForLooseMatch(combined);
+
+  return patterns.every((pattern) => {
+    const normalizedPattern = pattern.toLowerCase();
+    const sanitizedPattern = sanitizeForLooseMatch(normalizedPattern);
+    return (
+      combined.includes(normalizedPattern) ||
+      (sanitizedPattern.length > 0 &&
+        sanitizedCombined.includes(sanitizedPattern))
+    );
+  });
 }
 
 function generateCandidateOccurrences(
