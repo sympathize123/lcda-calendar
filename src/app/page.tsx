@@ -1,5 +1,5 @@
-import { CalendarPage } from "@/features/calendar/calendar-page";
+import { SiteLanding } from "@/features/site/site-landing";
 
 export default function Home() {
-  return <CalendarPage />;
+  return <SiteLanding />;
 }

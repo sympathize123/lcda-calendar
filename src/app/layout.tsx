@@ -23,6 +23,12 @@ export const metadata: Metadata = {
     "성균관대학교 LCDA 합주 일정을 위한 노션 감성의 하이브리드 캘린더",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
