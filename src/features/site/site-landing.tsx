@@ -138,10 +138,13 @@ function Marquee() {
 
   return (
     <div className="border-y border-white/10 bg-black/80 overflow-hidden">
-      <div className="marquee inline-flex whitespace-nowrap py-3 text-sm tracking-wider text-white/70" style={{ animation: "mlr-marquee 20s linear infinite" }}>
-        {Array.from({ length: 2 }).flatMap((_, loopIndex) =>
+      <div
+        className="marquee inline-flex whitespace-nowrap py-3 text-sm tracking-wider text-white/70"
+        style={{ animation: "mlr-marquee 20s linear infinite", minWidth: "200%" }}
+      >
+        {Array.from({ length: 6 }).flatMap((_, loopIndex) =>
           tickerItems.map((item, index) => (
-            <span key={`${loopIndex}-${index}`} className="mx-6 inline-flex items-center">
+            <span key={`${loopIndex}-${index}`} className="mx-8 inline-flex items-center">
               {item}
             </span>
           )),
