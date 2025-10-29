@@ -55,3 +55,6 @@ prisma/*.db
 !public/**/*.svg
 !public/**/*.mp4
 !public/**/*.webp
+
+# allow committed SQLite database for deployment
+!prisma/dev.db
