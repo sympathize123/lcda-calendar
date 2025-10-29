@@ -1,6 +1,6 @@
 
 import path from "node:path";
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const SQLITE_PREFIX = "file:";
 const dbUrl = process.env.DATABASE_URL;

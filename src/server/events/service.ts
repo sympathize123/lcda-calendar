@@ -4,10 +4,6 @@ import { RRule, Weekday } from "rrule";
 import { prisma } from "@/server/db/client";
 import { emitEventsChanged } from "./event-bus";
 import type { Prisma } from "@prisma/client";
-import type {
-  EventGetPayload,
-  EventWhereInput,
-} from "@/generated/prisma/models/Event";
 import { format } from "date-fns";
 
 export type RecurrenceRuleInput = {
@@ -67,7 +63,7 @@ export async function getEventsInRange(
   end: Date,
   filters?: EventFilters,
 ) {
-  const andFilters: EventWhereInput[] = [
+  const andFilters: Prisma.EventWhereInput[] = [
     { start: { lte: end } },
     {
       OR: [{ end: { gte: start } }, { recurrenceRule: { not: null } }],
@@ -273,7 +269,7 @@ export async function deleteEvent(id: string) {
   emitEventsChanged({ scope: "events" });
 }
 
-type EventWithParticipants = EventGetPayload<{
+type EventWithParticipants = Prisma.EventGetPayload<{
   include: { participants: { include: { member: true } } };
 }>;
 
