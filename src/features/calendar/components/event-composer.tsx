@@ -32,7 +32,12 @@ import {
   MagnifyingGlass,
 } from "phosphor-react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarEvent, CalendarView, RecurrenceFormState } from "../types";
+import {
+  CalendarEvent,
+  CalendarView,
+  EventFormPayload,
+  RecurrenceFormState,
+} from "../types";
 import { cn } from "@/lib/utils";
 import { fetchMembers } from "../api";
 
@@ -43,16 +48,7 @@ type EventComposerProps = {
   mode: "create" | "edit";
   initialDate?: Date | null;
   event?: CalendarEvent | null;
-  onSubmit: (payload: {
-    title: string;
-    description?: string;
-    location?: string;
-    color: string;
-    start: Date;
-    end: Date;
-    timezone: string;
-    recurrence?: RecurrenceFormState;
-  }) => Promise<void>;
+  onSubmit: (payload: EventFormPayload) => Promise<void>;
   isSubmitting?: boolean;
 };
 

@@ -3,7 +3,11 @@ import { ko } from "date-fns/locale";
 import { RRule, Weekday } from "rrule";
 import { prisma } from "@/server/db/client";
 import { emitEventsChanged } from "./event-bus";
-import type { Event, EventParticipant, Member } from "@/generated/prisma";
+import type { Prisma } from "@prisma/client";
+import type {
+  EventGetPayload,
+  EventWhereInput,
+} from "@/generated/prisma/models/Event";
 import { format } from "date-fns";
 
 export type RecurrenceRuleInput = {
@@ -63,23 +67,21 @@ export async function getEventsInRange(
   end: Date,
   filters?: EventFilters,
 ) {
-  const where: Parameters<typeof prisma.event.findMany>[0]["where"] = {
-    AND: [
-      { start: { lte: end } },
-      {
-        OR: [{ end: { gte: start } }, { recurrenceRule: { not: null } }],
-      },
-    ],
-  };
+  const andFilters: EventWhereInput[] = [
+    { start: { lte: end } },
+    {
+      OR: [{ end: { gte: start } }, { recurrenceRule: { not: null } }],
+    },
+  ];
 
   if (filters?.categories?.length) {
-    where.AND?.push({
+    andFilters.push({
       category: { in: filters.categories },
     });
   }
 
   if (filters?.participantIds?.length) {
-    where.AND?.push({
+    andFilters.push({
       participants: {
         some: {
           memberId: { in: filters.participantIds },
@@ -94,7 +96,9 @@ export async function getEventsInRange(
       : null;
 
   const rawEvents = await prisma.event.findMany({
-    where,
+    where: {
+      AND: andFilters,
+    },
     orderBy: {
       start: "asc",
     },
@@ -269,10 +273,12 @@ export async function deleteEvent(id: string) {
   emitEventsChanged({ scope: "events" });
 }
 
+type EventWithParticipants = EventGetPayload<{
+  include: { participants: { include: { member: true } } };
+}>;
+
 function expandEvents(
-  events: (Event & {
-    participants: (EventParticipant & { member: Member })[];
-  })[],
+  events: EventWithParticipants[],
   rangeStart: Date,
   rangeEnd: Date,
 ) {
@@ -340,9 +346,7 @@ function buildRRule(start: Date, rule: RecurrenceRuleInput) {
 }
 
 function toResponse(
-  event: Event & {
-    participants: (EventParticipant & { member: Member })[];
-  },
+  event: EventWithParticipants,
   start: Date,
   end: Date,
   recurring: boolean,

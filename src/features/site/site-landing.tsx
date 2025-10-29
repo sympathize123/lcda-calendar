@@ -2,31 +2,25 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createElement, useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties, DetailedHTMLProps, HTMLAttributes, JSX } from "react";
 import { galleryImages, heroMedia } from "./curation";
 import type { HeroMedia } from "./curation";
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "model-viewer": React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      > & {
-        src?: string;
-        alt?: string;
-        "auto-rotate"?: boolean;
-        "rotation-per-second"?: string;
-        "camera-controls"?: boolean;
-        "interaction-prompt"?: string;
-        exposure?: string;
-        "environment-image"?: string;
-        style?: React.CSSProperties;
-      };
-    }
-  }
-}
+type ModelViewerProps = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & {
+  src?: string;
+  alt?: string;
+  "auto-rotate"?: boolean;
+  "rotation-per-second"?: string;
+  "camera-controls"?: boolean;
+  "interaction-prompt"?: string;
+  exposure?: string;
+  "environment-image"?: string;
+  style?: CSSProperties;
+};
+
+const ModelViewer = (props: ModelViewerProps) =>
+  createElement("model-viewer", props);
 
 export function SiteLanding() {
   return (
@@ -361,7 +355,7 @@ function HeroLogo() {
   return (
     <div className="hero-logo-wrapper">
       {viewerReady && !scriptError ? (
-        <model-viewer
+        <ModelViewer
           src="/models/base_basic_shaded.glb"
           alt="LCDA 3D Logo"
           auto-rotate
