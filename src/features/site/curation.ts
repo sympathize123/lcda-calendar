@@ -15,7 +15,7 @@ export const heroMedia: HeroMedia[] = [
     src: "/club/hero.mp4",
     poster: "/club/hero.jpg",
     start: 14,
-    end: 22,
+    end: 21,
   },
   { type: "image", src: "/club/poster1.jpg", alt: "LCDA Rock Poster 1" },
   { type: "image", src: "/club/poster2.jpg", alt: "LCDA Rock Poster 2" },

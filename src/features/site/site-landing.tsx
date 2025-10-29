@@ -2,9 +2,31 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { galleryImages, heroMedia } from "./curation";
 import type { HeroMedia } from "./curation";
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "model-viewer": React.DetailedHTMLProps<
+        React.HTMLAttributes<HTMLElement>,
+        HTMLElement
+      > & {
+        src?: string;
+        alt?: string;
+        "auto-rotate"?: boolean;
+        "rotation-per-second"?: string;
+        "camera-controls"?: boolean;
+        "interaction-prompt"?: string;
+        exposure?: string;
+        "environment-image"?: string;
+        style?: React.CSSProperties;
+      };
+    }
+  }
+}
 
 export function SiteLanding() {
   return (
@@ -25,14 +47,15 @@ function SimpleNav() {
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-black/60 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="inline-flex items-center gap-3 font-semibold tracking-wide">
-          <span className="text-xs uppercase text-white/70">SKKU</span>
-          <span className="inline-flex gap-1 text-red-500">
-            <span>L</span>
-            <span>C</span>
-            <span>D</span>
-            <span>A</span>
-          </span>
+        <Link href="/" className="inline-flex items-center">
+          <Image
+            src="/club/LCDA_logo.jpg"
+            alt="LCDA 로고"
+            width={120}
+            height={40}
+            className="h-10 w-auto"
+            priority
+          />
         </Link>
         <nav className="flex items-center gap-4 text-sm">
           <Link href="/calendar" className="text-white/80 underline-offset-4 hover:text-white hover:underline">캘린더</Link>
@@ -96,7 +119,7 @@ function HeroFullBleed() {
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center justify-center px-4 pb-20 pt-20 text-center sm:px-6 sm:pb-24 sm:pt-32 lg:px-8">
         <HeroLogo />
         <p className="mt-8 max-w-[42rem] text-sm uppercase tracking-[0.32em] text-white/60">
-          Since 1998. We are the thunder that shakes the stage.
+          Since 1998. Thunderstruck.
         </p>
         <div className="mt-10 inline-flex flex-wrap items-center justify-center gap-3">
           <Link href="/calendar" className="rounded-full bg-white/90 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-black/30 backdrop-blur hover:bg-white">
@@ -309,79 +332,55 @@ function HeroVideo({
 }
 
 function HeroLogo() {
-  const [logoMask, setLogoMask] = useState<string | null>(null);
+  const [viewerReady, setViewerReady] = useState(false);
+  const [scriptError, setScriptError] = useState(false);
 
   useEffect(() => {
-    if (logoMask) return;
     if (typeof window === "undefined") return;
+    if (window.customElements?.get("model-viewer")) {
+      setViewerReady(true);
+      return;
+    }
 
-    const img = new window.Image();
-    img.crossOrigin = "anonymous";
-    img.src = "/club/LCDA_logo.jpg";
+    const existing = document.querySelector<HTMLScriptElement>("script[data-model-viewer]");
+    if (existing) {
+      existing.addEventListener("load", () => setViewerReady(true), { once: true });
+      existing.addEventListener("error", () => setScriptError(true), { once: true });
+      return;
+    }
 
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const context = canvas.getContext("2d");
-      if (!context) return;
-
-      context.drawImage(img, 0, 0);
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      const { data } = imageData;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i]!;
-        const g = data[i + 1]!;
-        const b = data[i + 2]!;
-        const brightness = r + g + b;
-
-        if (brightness < 80) {
-          data[i + 3] = 0;
-        } else {
-          data[i] = 255;
-          data[i + 1] = 255;
-          data[i + 2] = 255;
-          data[i + 3] = 255;
-        }
-      }
-
-      context.putImageData(imageData, 0, 0);
-      try {
-        const url = canvas.toDataURL("image/png");
-        setLogoMask(url);
-      } catch (error) {
-        console.warn("Failed generating logo mask", error);
-      }
-    };
-
-    img.onerror = (error) => {
-      console.warn("Failed loading LCDA logo asset", error);
-    };
-  }, [logoMask]);
+    const script = document.createElement("script");
+    script.type = "module";
+    script.src = "https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js";
+    script.dataset.modelViewer = "true";
+    script.onload = () => setViewerReady(true);
+    script.onerror = () => setScriptError(true);
+    document.head.appendChild(script);
+  }, []);
 
   return (
     <div className="hero-logo-wrapper">
-      <div className="hero-logo-orbit" aria-hidden="true" />
-      <div className="hero-logo-core">
-        <div className="hero-logo-metal">
-          <div className="hero-logo-layer">
-            <div
-              className="hero-logo-object"
-              style={
-                logoMask
-                  ? {
-                      WebkitMaskImage: `url(${logoMask})`,
-                      maskImage: `url(${logoMask})`,
-                    }
-                  : { opacity: 0 }
-              }
-            >
-              {logoMask ? null : <span className="hero-logo-loading" />}
-            </div>
-          </div>
+      {viewerReady && !scriptError ? (
+        <model-viewer
+          src="/models/base_basic_shaded.glb"
+          alt="LCDA 3D Logo"
+          auto-rotate
+          rotation-per-second="15deg"
+          camera-controls
+          interaction-prompt="none"
+          environment-image="neutral"
+          shadow-intensity="0.4"
+          style={{ width: "100%", height: "100%" }}
+        />
+      ) : (
+        <div className="hero-logo-loading-shell">
+          {scriptError ? (
+            <span className="hero-logo-loading-error">3D 뷰어 로드 실패</span>
+          ) : (
+            <span className="hero-logo-loading" />
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

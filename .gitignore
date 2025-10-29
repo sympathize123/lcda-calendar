@@ -48,3 +48,10 @@ prisma/*.db
 *.svg
 *.mp4
 *.webp
+
+# allow static assets under public/
+!public/**/*.jpg
+!public/**/*.png
+!public/**/*.svg
+!public/**/*.mp4
+!public/**/*.webp
