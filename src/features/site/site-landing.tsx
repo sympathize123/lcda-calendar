@@ -92,7 +92,7 @@ function HeroFullBleed() {
   }, [advance, idx, sequence]);
 
   return (
-    <section className="relative isolate grid min-h-[60vh] grid-rows-[minmax(420px,70vh)] overflow-hidden bg-black">
+    <section className="relative isolate grid min-h-[70vh] grid-rows-[minmax(480px,clamp(70vh,68vw,820px))] overflow-hidden bg-black">
       <div className="absolute inset-0">
         {sequence.map((item, i) => (
           <div
