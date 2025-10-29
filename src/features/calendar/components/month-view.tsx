@@ -4,7 +4,7 @@ import { format, isSameDay, isSameMonth, isToday } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Plus, ArrowsClockwise } from "phosphor-react";
 import { CalendarEvent } from "../types";
-import { getEventsForDay, getMonthMatrix, getWeekDays } from "../utils";
+import { getEventsForDay, getMonthMatrix, getWeekDays, resolveEventColor } from "../utils";
 import { cn } from "@/lib/utils";
 
 const MIN_MONTH_VIEW_WIDTH = 720;
@@ -101,9 +101,7 @@ export function MonthView({
                             key={event.id}
                             onClick={() => onEventClick?.(event)}
                             className="group/event relative inline-flex items-center gap-2 overflow-hidden rounded-[var(--radius-sm)] px-2 py-1 text-left text-xs font-medium text-white shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                            style={{
-                              backgroundColor: event.color,
-                            }}
+                            style={{ backgroundColor: resolveEventColor(event.color) }}
                             initial={{ opacity: 0, y: -6 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -6 }}

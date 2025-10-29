@@ -13,7 +13,7 @@ import {
 } from "date-fns";
 import { ko } from "date-fns/locale";
 import { CalendarEvent } from "../types";
-import { eventOverlapsRange, getWeekDays, WEEK_STARTS_ON } from "../utils";
+import { eventOverlapsRange, getWeekDays, resolveEventColor, WEEK_STARTS_ON } from "../utils";
 import { cn } from "@/lib/utils";
 
 const TOTAL_SLOTS = 48;
@@ -181,7 +181,7 @@ export function WeekTimeline({
                           <motion.button
                             type="button"
                             key={event.id}
-                            style={{ top: topStyle, height: heightStyle, backgroundColor: event.color }}
+                            style={{ top: topStyle, height: heightStyle, backgroundColor: resolveEventColor(event.color) }}
                               className="pointer-events-auto absolute left-0 right-0 z-20 mx-1 flex flex-col gap-1 overflow-hidden rounded-[var(--radius-sm)] px-2 py-1 text-left text-xs font-semibold text-white shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
                               onClick={(e) => {
                                 e.stopPropagation();

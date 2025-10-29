@@ -67,3 +67,12 @@ export function getEventsForDay(events: CalendarEvent[], day: Date) {
 export function getEventsForRange(events: CalendarEvent[], start: Date, end: Date) {
   return events.filter((event) => eventOverlapsRange(event, start, end));
 }
+
+const LEGACY_PRIMARY_HEXES = ["#1a73e8", "#1A73E8", "#1a73e8ff", "#1A73E8FF"];
+
+export function resolveEventColor(color?: string | null) {
+  if (!color || LEGACY_PRIMARY_HEXES.includes(color)) {
+    return "var(--primary)";
+  }
+  return color;
+}

@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { CalendarEvent } from "../types";
 import { Clock, MapPin, Repeat, X, CaretLeft, Users, Palette } from "phosphor-react";
-import { getEventsForDay } from "../utils";
+import { getEventsForDay, resolveEventColor } from "../utils";
 import { ReactNode } from "react";
 
 export type DetailState =
@@ -113,7 +113,7 @@ export function EventDetailDialog({
                       </div>
                       <span
                         className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: event.color }}
+                        style={{ backgroundColor: resolveEventColor(event.color) }}
                       />
                     </button>
                   ))
