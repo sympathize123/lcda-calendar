@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { createElement, useCallback, useEffect, useRef, useState } from "react";
-import type { CSSProperties, DetailedHTMLProps, HTMLAttributes, JSX } from "react";
+import type { CSSProperties, DetailedHTMLProps, HTMLAttributes, JSX, ReactNode } from "react";
 import { galleryImages, heroMedia } from "./curation";
 import type { HeroMedia } from "./curation";
 
@@ -129,21 +129,23 @@ function HeroFullBleed() {
 }
 
 function Marquee() {
+  const tickerItems: ReactNode[] = [
+    <>
+      SKKU <span className="text-red-500">LCDA</span> ROCK BAND
+    </>,
+    "LIVE • STUDIO • PRACTICE",
+  ];
+
   return (
-    <div className="border-y border-white/10 bg-black/80">
-      <div className="marquee whitespace-nowrap py-3 text-sm tracking-wider text-white/70" style={{ animation: "mlr-marquee 20s linear infinite" }}>
-        <span className="mx-6">
-          SKKU <span className="text-red-500">LCDA</span> ROCK BAND
-        </span>
-        <span className="mx-6">LIVE • STUDIO • PRACTICE</span>
-        <span className="mx-6">
-          SKKU <span className="text-red-500">LCDA</span> ROCK BAND
-        </span>
-        <span className="mx-6">LIVE • STUDIO • PRACTICE</span>
-        <span className="mx-6">
-          SKKU <span className="text-red-500">LCDA</span> ROCK BAND
-        </span>
-        <span className="mx-6">LIVE • STUDIO • PRACTICE</span>
+    <div className="border-y border-white/10 bg-black/80 overflow-hidden">
+      <div className="marquee inline-flex whitespace-nowrap py-3 text-sm tracking-wider text-white/70" style={{ animation: "mlr-marquee 20s linear infinite" }}>
+        {Array.from({ length: 2 }).flatMap((_, loopIndex) =>
+          tickerItems.map((item, index) => (
+            <span key={`${loopIndex}-${index}`} className="mx-6 inline-flex items-center">
+              {item}
+            </span>
+          )),
+        )}
       </div>
     </div>
   );

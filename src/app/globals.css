@@ -125,6 +125,11 @@ body {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 :focus-visible {
@@ -175,8 +180,8 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(200px, 28vw, 300px);
-  height: clamp(200px, 28vw, 300px);
+  width: clamp(220px, 32vw, 440px);
+  height: clamp(220px, 32vw, 440px);
   border-radius: 9999px;
   background: transparent;
   border: none;
@@ -198,6 +203,20 @@ a {
   width: 100%;
   height: 100%;
   background: transparent;
+}
+
+@media (max-width: 640px) {
+  .hero-logo-wrapper {
+    width: clamp(180px, 60vw, 240px);
+    height: clamp(180px, 60vw, 240px);
+  }
+}
+
+@media (min-width: 1600px) {
+  .hero-logo-wrapper {
+    width: clamp(260px, 26vw, 520px);
+    height: clamp(260px, 26vw, 520px);
+  }
 }
 
 .hero-logo-loading-shell {
