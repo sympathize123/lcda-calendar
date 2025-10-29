@@ -56,5 +56,8 @@ prisma/*.db
 !public/**/*.mp4
 !public/**/*.webp
 
+# allow Next app icons
+!src/app/*.png
+
 # allow committed SQLite database for deployment
 !prisma/dev.db
