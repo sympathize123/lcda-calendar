@@ -13,7 +13,7 @@ model Event {
   title          String
   description    String?
   location       String?
-  color          String   @default("#1A73E8")
+  color          String   @default("#D9283B")
   category       String   @default("합주")
   start          DateTime
   end            DateTime

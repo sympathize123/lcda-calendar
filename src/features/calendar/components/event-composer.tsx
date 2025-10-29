@@ -883,7 +883,7 @@ function generateTimeOptions() {
 }
 
 const COLOR_PRESETS = [
-  { label: "합주", color: "#1A73E8" },
+  { label: "합주", color: "#D9283B" },
   { label: "섹션", color: "#0EA5E9" },
   { label: "회의", color: "#F59E0B" },
   { label: "특강", color: "#F97316" },

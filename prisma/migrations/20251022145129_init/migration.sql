@@ -4,7 +4,7 @@ CREATE TABLE "Event" (
     "title" TEXT NOT NULL,
     "description" TEXT,
     "location" TEXT,
-    "color" TEXT NOT NULL DEFAULT '#1A73E8',
+    "color" TEXT NOT NULL DEFAULT '#D9283B',
     "start" DATETIME NOT NULL,
     "end" DATETIME NOT NULL,
     "timezone" TEXT NOT NULL DEFAULT 'Asia/Seoul',

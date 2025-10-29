@@ -26,7 +26,7 @@ CREATE TABLE "new_Event" (
     "title" TEXT NOT NULL,
     "description" TEXT,
     "location" TEXT,
-    "color" TEXT NOT NULL DEFAULT '#1A73E8',
+    "color" TEXT NOT NULL DEFAULT '#D9283B',
     "category" TEXT NOT NULL DEFAULT '합주',
     "start" DATETIME NOT NULL,
     "end" DATETIME NOT NULL,
