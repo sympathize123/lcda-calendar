@@ -116,10 +116,16 @@ function HeroFullBleed() {
           Since 1998. Thunderstruck.
         </p>
         <div className="mt-10 inline-flex flex-wrap items-center justify-center gap-3">
-          <Link href="/calendar" className="rounded-full bg-white/90 px-5 py-2 text-sm font-semibold text-black shadow-lg shadow-black/30 backdrop-blur hover:bg-white">
+          <Link
+            href="/calendar"
+            className="rounded-full border border-white/30 px-5 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:border-white hover:bg-white/10 hover:text-white"
+          >
             캘린더
           </Link>
-          <a href="#gallery" className="rounded-full border border-white/30 px-5 py-2 text-sm text-white/90 backdrop-blur hover:bg-white/10">
+          <a
+            href="#gallery"
+            className="rounded-full border border-white/30 px-5 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:border-white hover:bg-white/10 hover:text-white"
+          >
             갤러리
           </a>
         </div>
@@ -131,7 +137,7 @@ function HeroFullBleed() {
 function Marquee() {
   const tickerItems: ReactNode[] = [
     <>
-      SKKU <span className="text-red-500">LCDA</span> ROCK BAND
+      SKKU&nbsp; <span className="text-red-500">LCDA&nbsp;</span> ROCK BAND
     </>,
     "LIVE • STUDIO • PRACTICE",
   ];

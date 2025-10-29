@@ -9,8 +9,8 @@
   --foreground: #1f2937;
   --muted: #6b7280;
   --border: #e2e8f0;
-  --primary: #1a73e8;
-  --primary-soft: #e3f2ff;
+  --primary: #d9283b;
+  --primary-soft: rgba(217, 40, 59, 0.18);
   --accent: #0ea5e9;
   --danger: #dc2626;
   --success: #16a34a;
@@ -71,8 +71,8 @@
     --foreground: #e2e8f0;
     --muted: #94a3b8;
     --border: rgba(148, 163, 184, 0.28);
-    --primary: #60a5fa;
-    --primary-soft: rgba(96, 165, 250, 0.18);
+    --primary: #f43f5e;
+    --primary-soft: rgba(244, 63, 94, 0.2);
     --accent: #38bdf8;
     --danger: #f87171;
     --success: #34d399;
@@ -130,6 +130,144 @@ body {
 
 html {
   overflow-x: hidden;
+}
+
+.calendar-theme {
+  position: relative;
+  --background: #f9f5f2;
+  --surface: rgba(255, 255, 255, 0.92);
+  --surface-muted: rgba(248, 242, 238, 0.85);
+  --surface-elevated: rgba(255, 255, 255, 0.96);
+  --foreground: #1f2023;
+  --muted: rgba(79, 70, 59, 0.78);
+  --border: rgba(161, 98, 89, 0.18);
+  --primary: #d9273b;
+  --primary-soft: rgba(217, 39, 59, 0.18);
+  --accent: #f97316;
+  --shadow-soft: 0px 24px 60px -28px rgba(97, 33, 25, 0.35);
+  --shadow-ring: 0 0 0 1px rgba(217, 39, 59, 0.18);
+  --today: #b91c1c;
+  --today-contrast: #fff5f5;
+  --slot: rgba(217, 39, 59, 0.08);
+  background: radial-gradient(120% 120% at 10% -10%, rgba(217, 39, 59, 0.12), transparent 45%), radial-gradient(85% 120% at 90% 0%, rgba(249, 115, 22, 0.1), transparent 50%), var(--background);
+}
+
+:root[data-theme="dark"] .calendar-theme {
+  --background: #05040a;
+  --surface: rgba(11, 12, 20, 0.9);
+  --surface-muted: rgba(12, 12, 16, 0.8);
+  --surface-elevated: rgba(15, 16, 24, 0.92);
+  --foreground: #f1f5f9;
+  --muted: rgba(148, 163, 184, 0.7);
+  --border: rgba(239, 68, 68, 0.18);
+  --primary: #f43f5e;
+  --primary-soft: rgba(244, 63, 94, 0.16);
+  --accent: #fb923c;
+  --shadow-soft: 0px 24px 60px -30px rgba(239, 68, 68, 0.25);
+  --shadow-ring: 0 0 0 1px rgba(244, 63, 94, 0.2);
+  --today: #fb7185;
+  --today-contrast: #0b0c14;
+  --slot: rgba(244, 63, 94, 0.14);
+  background: radial-gradient(120% 120% at -5% -20%, rgba(244, 63, 94, 0.22), transparent 50%), radial-gradient(85% 120% at 110% -10%, rgba(251, 146, 60, 0.16), transparent 60%), var(--background);
+}
+
+.calendar-theme::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(45% 35% at 20% 10%, rgba(255, 255, 255, 0.08), transparent 60%), radial-gradient(40% 30% at 80% 0%, rgba(217, 39, 59, 0.08), transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  z-index: -1;
+}
+
+/* Tailwind utility overrides to respect calendar theme tokens */
+.calendar-theme .bg-primary {
+  background-color: var(--primary) !important;
+  color: var(--today-contrast) !important;
+}
+
+.calendar-theme .hover\:bg-primary\/90:hover {
+  background-color: color-mix(in srgb, var(--primary) 90%, black 10%) !important;
+}
+
+.calendar-theme .bg-primary-soft {
+  background-color: var(--primary-soft) !important;
+  color: var(--primary) !important;
+}
+
+.calendar-theme .hover\:bg-primary-soft:hover {
+  background-color: color-mix(in srgb, var(--primary-soft) 60%, transparent) !important;
+  color: var(--primary) !important;
+}
+
+.calendar-theme .text-primary {
+  color: var(--primary) !important;
+}
+
+.calendar-theme .hover\:text-primary:hover {
+  color: var(--primary) !important;
+}
+
+.calendar-theme .border-primary {
+  border-color: var(--primary) !important;
+}
+
+.calendar-theme .bg-primary-soft\/60 {
+  background-color: color-mix(in srgb, var(--primary-soft) 70%, transparent) !important;
+}
+
+.calendar-theme .bg-primary-soft\/70 {
+  background-color: color-mix(in srgb, var(--primary-soft) 80%, transparent) !important;
+}
+
+.calendar-theme .focus-visible\:ring-primary:focus-visible {
+  --tw-ring-color: var(--primary) !important;
+}
+
+.calendar-theme .focus-visible\:ring-offset-surface:focus-visible {
+  --tw-ring-offset-color: var(--surface) !important;
+}
+
+.calendar-theme .text-muted {
+  color: var(--muted) !important;
+}
+
+.calendar-theme .bg-surface {
+  background-color: var(--surface) !important;
+}
+
+.calendar-theme .bg-surface-muted\/80 {
+  background-color: color-mix(in srgb, var(--surface-muted) 80%, transparent) !important;
+}
+
+.calendar-theme .bg-surface-elevated\/60 {
+  background-color: color-mix(in srgb, var(--surface-elevated) 60%, transparent) !important;
+}
+
+.calendar-theme .hover\:bg-primary-soft\/40:hover {
+  background-color: color-mix(in srgb, var(--primary-soft) 40%, transparent) !important;
+}
+
+.calendar-theme .hover\:bg-primary-soft\/60:hover {
+  background-color: color-mix(in srgb, var(--primary-soft) 65%, transparent) !important;
+}
+
+.calendar-theme .bg-primary-soft\/60 {
+  background-color: color-mix(in srgb, var(--primary-soft) 70%, transparent) !important;
+}
+
+.calendar-theme .bg-primary-soft\/40 {
+  background-color: color-mix(in srgb, var(--primary-soft) 40%, transparent) !important;
+}
+
+.calendar-theme .hover\:bg-primary-soft\/70:hover {
+  background-color: color-mix(in srgb, var(--primary-soft) 85%, transparent) !important;
+}
+
+.calendar-theme .bg-primary\/90 {
+  background-color: color-mix(in srgb, var(--primary) 90%, transparent) !important;
 }
 
 :focus-visible {

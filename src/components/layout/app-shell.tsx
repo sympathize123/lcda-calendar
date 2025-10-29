@@ -69,7 +69,7 @@ export function AppShell({
   }, [deviceParam]);
 
   const content = (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="calendar-theme min-h-screen bg-background text-foreground">
       <header
         data-overlay-active={overlayActive}
         className="sticky top-0 z-40 border-b border-border/60 bg-surface/95 pt-[var(--safe-area-top)] backdrop-blur-md transition-all duration-300 ease-out data-[overlay-active=true]:-translate-y-20 data-[overlay-active=true]:pointer-events-none data-[overlay-active=true]:opacity-0"
